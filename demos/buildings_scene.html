@@ -25,27 +25,38 @@
       <arcgis-scene item-id="029fffdc707b4a0abfeac2ff81e92397" basemap="arcgis/topographic">
          <arcgis-zoom position="top-left"></arcgis-zoom>
       </arcgis-scene>
-      <script src="../shared/config.js"></script>
       <script>
-         require(["esri/config", "esri/views/SceneView"], function(esriConfig, SceneView) {
-            esriConfig.apiKey = window.arcgisConfig.apiKey;
-            const arcgisScene = document.querySelector("arcgis-scene");
-            arcgisScene.addEventListener("arcgisViewReadyChange", () => {
-                const view = arcgisScene.view;
-                view.camera = {
-                    position: [
-                        -104.81999871,
-                        39.70848386,
-                        1805.86084],
-                    heading: 77.40,
-                    tilt: 77.25};
-                view.environment.lighting = {
-                    type: "sun",
-                    date: new Date("January 1, 2022 15:00:00 UTC"),
-                };
-                view.environment.lighting.directShadowsEnabled = true;
-            });
-         });
+         // Dynamically determine the base URL for config.js
+         const baseUrl = window.location.hostname === 'kdmonroe.github.io' 
+           ? '/arcgis-js-maps/shared/config.js' 
+           : '../shared/config.js';
+         
+         // Create and load the script element dynamically
+         const configScript = document.createElement('script');
+         configScript.src = baseUrl;
+         configScript.onload = function() {
+           // Initialize ArcGIS only after config is loaded
+           require(["esri/config", "esri/views/SceneView"], function(esriConfig, SceneView) {
+              esriConfig.apiKey = window.arcgisConfig.apiKey;
+              const arcgisScene = document.querySelector("arcgis-scene");
+              arcgisScene.addEventListener("arcgisViewReadyChange", () => {
+                  const view = arcgisScene.view;
+                  view.camera = {
+                      position: [
+                          -104.81999871,
+                          39.70848386,
+                          1805.86084],
+                      heading: 77.40,
+                      tilt: 77.25};
+                  view.environment.lighting = {
+                      type: "sun",
+                      date: new Date("January 1, 2022 15:00:00 UTC"),
+                  };
+                  view.environment.lighting.directShadowsEnabled = true;
+              });
+           });
+         };
+         document.head.appendChild(configScript);
       </script>
   </body>
 </html>
