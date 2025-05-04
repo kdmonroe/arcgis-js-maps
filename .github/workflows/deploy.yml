@@ -18,6 +18,10 @@ jobs:
         run: |
           mkdir -p shared
           echo 'window.arcgisConfig = { apiKey: "${{ secrets.ARCGIS_API_KEY }}" };' > shared/config.js
+          touch .nojekyll
+          # Debug: List created files
+          ls -la shared/
+          cat shared/config.js | sed 's/apiKey: "[^"]*"/apiKey: "REDACTED"/g'
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
@@ -26,3 +30,6 @@ jobs:
           branch: gh-pages
           token: ${{ secrets.GITHUB_TOKEN }}
           clean: true
+          clean-exclude: |
+            .nojekyll
+            shared/config.js
