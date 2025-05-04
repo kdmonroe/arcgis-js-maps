@@ -20,7 +20,7 @@
    ></script> 
 </head>     
 <body>  
-  <arcgis-map basemap="gray-vector" zoom="10" center="-79.379966, 43.740473"></arcgis-map>
+  <arcgis-map basemap="gray-3d" zoom="10" center="-79.379966, 43.740473"></arcgis-map>
 
   <script>
     // Dynamically determine the base URL for config.js
@@ -33,57 +33,39 @@
     configScript.src = baseUrl;
     configScript.onload = function() {
       // Initialize ArcGIS only after config is loaded
-      require([
-        "esri/config", 
-        "esri/layers/FeatureLayer"
-      ], function(esriConfig, FeatureLayer) {
-        // Set API key
+      require(["esri/config", "esri/layers/FeatureLayer"], function(esriConfig, FeatureLayer) {
         esriConfig.apiKey = window.arcgisConfig.apiKey;
-        
-        // Get map component
         const arcgisMap = document.querySelector("arcgis-map");
-        
-        // Wait for map to be fully loaded
-        arcgisMap.when = function() {
-          return new Promise((resolve) => {
-            if (arcgisMap.view) {
-              resolve(arcgisMap.view);
-            } else {
-              arcgisMap.addEventListener("arcgisViewReady", () => {
-                console.log("Map view is ready");
-                resolve(arcgisMap.view);
-              });
-            }
-          });
-        };
-        
-        arcgisMap.when().then(() => {
-          console.log("Adding layers to map");
-          
-          // Create feature layers
-          const torontoPermits = new FeatureLayer({
-            url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Parking_Permit_Areas/FeatureServer",
-            title: "Parking Permit Areas"
-          });
-          
-          const torontoRoads = new FeatureLayer({
-            url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Toronto_Roads/FeatureServer",
-            title: "Toronto Roads"
-          });
-          
-          const torontoBoundary = new FeatureLayer({
-            url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Toronto_City_Boundary/FeatureServer",
-            title: "Toronto Boundary"
-          });
-          
-          // Add layers individually
-          arcgisMap.addLayer(torontoPermits);
-          arcgisMap.addLayer(torontoRoads);
-          arcgisMap.addLayer(torontoBoundary);
-          
-          console.log("All layers added");
-        }).catch(error => {
-          console.error("Error loading map:", error);
+        arcgisMap.addEventListener("arcgisViewReadyChange", () => {
+          try {
+            // Add city boundary first
+            const torontoBoundary = new FeatureLayer({   
+              url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Toronto_City_Boundary/FeatureServer",
+              outFields: ["*"],
+              title: "Toronto Boundary"
+            }); 
+            arcgisMap.addLayer(torontoBoundary);
+            
+            // Add roads second
+            const torontoRoads = new FeatureLayer({   
+              url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Toronto_Roads/FeatureServer",
+              outFields: ["*"],
+              title: "Toronto Roads"
+            }); 
+            arcgisMap.addLayer(torontoRoads);
+            
+            // Add parking permits last
+            const torontoPermits = new FeatureLayer({   
+              url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Parking_Permit_Areas/FeatureServer",
+              outFields: ["*"],
+              title: "Parking Permit Areas"
+            }); 
+            arcgisMap.addLayer(torontoPermits);
+            
+            console.log("All layers added successfully");
+          } catch (error) {
+            console.error("Error loading feature layers:", error);
+          }
         });
       });
     };
