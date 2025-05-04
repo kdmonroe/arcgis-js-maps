@@ -22,7 +22,7 @@ jobs:
       - name: Clone gh-pages branch
         run: |
           mkdir -p /tmp/gh-pages
-          git clone --single-branch --branch gh-pages https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git /tmp/gh-pages
+          git clone --single-branch --branch gh-pages "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" /tmp/gh-pages
       
       - name: Copy config.js and ensure .nojekyll exists
         run: |
@@ -47,4 +47,4 @@ jobs:
           git add -f shared/config.js .nojekyll
           git add -A
           git commit -m "Update config.js file with API key" || echo "No changes to commit"
-          git push origin gh-pages
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages

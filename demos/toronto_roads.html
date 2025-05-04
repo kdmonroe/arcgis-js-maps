@@ -89,11 +89,37 @@
           loadLayers(window.arcgisConfig.apiKey);
         } else {
           console.error("Config loaded but API key not found");
+          alert("API key not found. Please check your configuration.");
         }
       };
       
       configScript.onerror = function() {
         console.error("Failed to load config from: " + baseUrl);
+        // Try the alternate path as fallback
+        const altPath = window.location.hostname === 'kdmonroe.github.io' 
+          ? '../shared/config.js'  // Try relative path as fallback
+          : '/arcgis-js-maps/shared/config.js';  // Try absolute path as fallback
+        
+        console.log("Attempting fallback config load from:", altPath);
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = altPath;
+        
+        fallbackScript.onload = function() {
+          console.log("Fallback config loaded successfully");
+          if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+            loadLayers(window.arcgisConfig.apiKey);
+          } else {
+            console.error("Fallback config loaded but API key not found");
+            alert("API key not found. Please check your configuration.");
+          }
+        };
+        
+        fallbackScript.onerror = function() {
+          console.error("All config loading attempts failed");
+          alert("Failed to load configuration. Please check the console for details.");
+        };
+        
+        document.head.appendChild(fallbackScript);
       };
       
       document.head.appendChild(configScript);
