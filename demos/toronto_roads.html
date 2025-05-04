@@ -22,26 +22,37 @@
 <body>  
   <arcgis-map basemap="gray-3d" zoom="10" center="-79.379966, 43.740473"></arcgis-map>
 
-  <script src="../shared/config.js"></script>
   <script>
-  require(["esri/config", "esri/layers/FeatureLayer"], function(esriConfig, FeatureLayer) {
-    esriConfig.apiKey = window.arcgisConfig.apiKey;
-    const arcgisMap = document.querySelector("arcgis-map");
-    arcgisMap.addEventListener("arcgisViewReadyChange", () => {
-      const torontoPermits = new FeatureLayer({   
-        url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Parking_Permit_Areas/FeatureServer",   
-      }); 
-      arcgisMap.addLayer(torontoPermits);
-      const torontoRoads = new FeatureLayer({   
-        url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Toronto_Roads/FeatureServer",   
-    }); 
-    arcgisMap.addLayer(torontoRoads);
-    const torontoBoundary = new FeatureLayer({   
-        url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Toronto_City_Boundary/FeatureServer",   
-    }); 
-    arcgisMap.addLayer(torontoBoundary);
-  });
-  });
-</script>
+    // Dynamically determine the base URL for config.js
+    const baseUrl = window.location.hostname === 'kdmonroe.github.io' 
+      ? '/arcgis-js-maps/shared/config.js' 
+      : '../shared/config.js';
+    
+    // Create and load the script element dynamically
+    const configScript = document.createElement('script');
+    configScript.src = baseUrl;
+    configScript.onload = function() {
+      // Initialize ArcGIS only after config is loaded
+      require(["esri/config", "esri/layers/FeatureLayer"], function(esriConfig, FeatureLayer) {
+        esriConfig.apiKey = window.arcgisConfig.apiKey;
+        const arcgisMap = document.querySelector("arcgis-map");
+        arcgisMap.addEventListener("arcgisViewReadyChange", () => {
+          const torontoPermits = new FeatureLayer({   
+            url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Parking_Permit_Areas/FeatureServer",   
+          }); 
+          arcgisMap.addLayer(torontoPermits);
+          const torontoRoads = new FeatureLayer({   
+            url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Toronto_Roads/FeatureServer",   
+          }); 
+          arcgisMap.addLayer(torontoRoads);
+          const torontoBoundary = new FeatureLayer({   
+            url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Toronto_City_Boundary/FeatureServer",   
+          }); 
+          arcgisMap.addLayer(torontoBoundary);
+        });
+      });
+    };
+    document.head.appendChild(configScript);
+  </script>
 </body>
 </html>

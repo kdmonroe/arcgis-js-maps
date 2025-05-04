@@ -35,49 +35,60 @@
         <arcgis-navigation-toggle position="top-left"></arcgis-navigation-toggle>
     </arcgis-scene>
     
-    <script src="../shared/config.js"></script>
     <script>
-        require([
-            "esri/config",
-            "esri/WebScene",
-            "esri/views/SceneView",
-            "esri/widgets/Home",
-            "esri/Camera"
-        ], function(esriConfig, WebScene, SceneView, Home, Camera) {
-            // Set API key from shared config
-            esriConfig.apiKey = window.arcgisConfig.apiKey;
-            
-            const arcgisScene = document.querySelector("arcgis-scene");
-            arcgisScene.addEventListener("arcgisViewReadyChange", () => {
-                const view = arcgisScene.view;
+        // Dynamically determine the base URL for config.js
+        const baseUrl = window.location.hostname === 'kdmonroe.github.io' 
+          ? '/arcgis-js-maps/shared/config.js' 
+          : '../shared/config.js';
+        
+        // Create and load the script element dynamically
+        const configScript = document.createElement('script');
+        configScript.src = baseUrl;
+        configScript.onload = function() {
+            // Initialize ArcGIS only after config is loaded
+            require([
+                "esri/config",
+                "esri/WebScene",
+                "esri/views/SceneView",
+                "esri/widgets/Home",
+                "esri/Camera"
+            ], function(esriConfig, WebScene, SceneView, Home, Camera) {
+                // Set API key from shared config
+                esriConfig.apiKey = window.arcgisConfig.apiKey;
                 
-                view.camera = new Camera({
-                    position: {
-                        x: -76.0, 
-                        y: 37.0,  
-                        z: 500000, 
-                        spatialReference: {
-                            wkid: 4326
-                        }
-                    },
-                    heading: 315,  
-                    tilt: 30,      
-                    fov: 70        
+                const arcgisScene = document.querySelector("arcgis-scene");
+                arcgisScene.addEventListener("arcgisViewReadyChange", () => {
+                    const view = arcgisScene.view;
+                    
+                    view.camera = new Camera({
+                        position: {
+                            x: -76.0, 
+                            y: 37.0,  
+                            z: 500000, 
+                            spatialReference: {
+                                wkid: 4326
+                            }
+                        },
+                        heading: 315,  
+                        tilt: 30,      
+                        fov: 70        
+                    });
+                    
+                    // Set lighting
+                    view.environment.lighting = {
+                        type: "sun",
+                        date: new Date(),
+                        directShadowsEnabled: true
+                    };
+                    
+                    // Set atmosphere
+                    view.environment.atmosphere = {
+                        quality: "high"
+                    };
                 });
-                
-                // Set lighting
-                view.environment.lighting = {
-                    type: "sun",
-                    date: new Date(),
-                    directShadowsEnabled: true
-                };
-                
-                // Set atmosphere
-                view.environment.atmosphere = {
-                    quality: "high"
-                };
             });
-        });
+        };
+        document.head.appendChild(configScript);
     </script>
 </body>
 </html> 
