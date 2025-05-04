@@ -20,24 +20,24 @@
    ></script> 
 </head>     
 <body>  
+  <!-- Reverted to original gray-3d basemap -->
   <arcgis-map basemap="gray-3d" zoom="10" center="-79.379966, 43.740473"></arcgis-map>
 
   <script>
-    // Dynamically determine the base URL for config.js
-    const baseUrl = window.location.hostname === 'kdmonroe.github.io' 
-      ? '/arcgis-js-maps/shared/config.js' 
-      : '../shared/config.js';
-    
-    // Create and load the script element dynamically
-    const configScript = document.createElement('script');
-    configScript.src = baseUrl;
-    configScript.onload = function() {
-      // Initialize ArcGIS only after config is loaded
+    // Function to load layers once the map is ready
+    function loadLayers(apiKey) {
       require(["esri/config", "esri/layers/FeatureLayer"], function(esriConfig, FeatureLayer) {
-        esriConfig.apiKey = window.arcgisConfig.apiKey;
+        // Set API key
+        esriConfig.apiKey = apiKey;
+        
+        // Get map component
         const arcgisMap = document.querySelector("arcgis-map");
-        arcgisMap.addEventListener("arcgisViewReadyChange", () => {
+        
+        // Using arcgisViewReadyChange as specified
+        arcgisMap.addEventListener("arcgisViewReadyChange", function(event) {
           try {
+            console.log("Map view ready change event fired");
+            
             // Add city boundary first
             const torontoBoundary = new FeatureLayer({   
               url: "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/Toronto_City_Boundary/FeatureServer",
@@ -68,8 +68,40 @@
           }
         });
       });
-    };
-    document.head.appendChild(configScript);
+    }
+    
+    // Improved config loading function without fallback API key
+    function loadConfig() {
+      // Determine the correct path based on hostname
+      const isGitHubPages = window.location.hostname.includes('github.io');
+      const baseUrl = isGitHubPages 
+        ? '/arcgis-js-maps/shared/config.js' 
+        : '../shared/config.js';
+      
+      console.log("Loading config from:", baseUrl);
+      
+      // Create and load the script element
+      const configScript = document.createElement('script');
+      configScript.src = baseUrl;
+      
+      configScript.onload = function() {
+        console.log("Config loaded successfully");
+        if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+          loadLayers(window.arcgisConfig.apiKey);
+        } else {
+          console.error("Config loaded but API key not found");
+        }
+      };
+      
+      configScript.onerror = function() {
+        console.error("Failed to load config from: " + baseUrl);
+      };
+      
+      document.head.appendChild(configScript);
+    }
+    
+    // Start the loading process
+    loadConfig();
   </script>
 </body>
 </html>
