@@ -1,0 +1,40 @@
+name: Deploy Config File
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  deploy-config:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      - name: Create config file with API key
+        run: |
+          mkdir -p shared
+          echo 'window.arcgisConfig = { apiKey: "${{ secrets.ARCGIS_API_KEY }}" };' > shared/config.js
+          
+      - name: Clone gh-pages branch
+        run: |
+          mkdir -p /tmp/gh-pages
+          git clone --single-branch --branch gh-pages https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git /tmp/gh-pages
+      
+      - name: Copy config.js and ensure .nojekyll exists
+        run: |
+          mkdir -p /tmp/gh-pages/shared
+          cp shared/config.js /tmp/gh-pages/shared/
+          touch /tmp/gh-pages/.nojekyll
+      
+      - name: Commit and push changes
+        run: |
+          cd /tmp/gh-pages
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add shared/config.js .nojekyll
+          git commit -m "Update config.js file with API key" || echo "No changes to commit"
+          git push origin gh-pages
