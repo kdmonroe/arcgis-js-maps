@@ -72,9 +72,8 @@
     
     // Improved config loading function without fallback API key
     function loadConfig() {
-      // Determine the correct path based on hostname
-      const isGitHubPages = window.location.hostname.includes('github.io');
-      const baseUrl = isGitHubPages 
+      // Use the specific domain name instead of generic github.io check
+      const baseUrl = window.location.hostname === 'kdmonroe.github.io' 
         ? '/arcgis-js-maps/shared/config.js' 
         : '../shared/config.js';
       
