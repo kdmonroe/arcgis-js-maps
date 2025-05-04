@@ -19,7 +19,7 @@ jobs:
           mkdir -p shared
           echo 'window.arcgisConfig = { apiKey: "${{ secrets.ARCGIS_API_KEY }}" };' > shared/config.js
           touch .nojekyll
-          # Debug: List created files
+          # Debug output (redacted)
           ls -la shared/
           cat shared/config.js | sed 's/apiKey: "[^"]*"/apiKey: "REDACTED"/g'
 
@@ -29,7 +29,7 @@ jobs:
           folder: .
           branch: gh-pages
           token: ${{ secrets.GITHUB_TOKEN }}
-          clean: true
+          clean: false
           clean-exclude: |
             .nojekyll
             shared/config.js
