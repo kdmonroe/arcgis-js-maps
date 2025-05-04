@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Maryland Traffic Cameras</title>
+    <style>
+        html,
+        body {
+            background-color: var(--calcite-ui-foreground-2);
+            padding: 0;
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+    <!-- Load Calcite components from CDN -->
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/3.0.3/calcite.css" />
+    <script type="module" src="https://js.arcgis.com/calcite-components/3.0.3/calcite.esm.js"></script>
+    <!-- Load the ArcGIS Maps SDK for JavaScript from CDN -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/dark/main.css" />
+    <script src="https://js.arcgis.com/4.32/"></script>
+    <!-- Load Map components from CDN-->
+    <script
+        type="module"
+        src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"
+    ></script>
+</head>
+<body>
+    <!-- Create a scene with the item ID for Maryland Traffic Cameras -->
+    <arcgis-scene item-id="9b73878c35274b0599ab178c24019a44" basemap="dark-gray-3d" ground="world-elevation">
+        <!-- Use arcgis-home component instead of Home widget -->
+        <arcgis-home position="top-left"></arcgis-home>
+        <arcgis-zoom position="top-left"></arcgis-zoom>
+        <arcgis-navigation-toggle position="top-left"></arcgis-navigation-toggle>
+    </arcgis-scene>
+    
+    <script src="../shared/config.js"></script>
+    <script>
+        require([
+            "esri/config",
+            "esri/WebScene",
+            "esri/views/SceneView",
+            "esri/widgets/Home",
+            "esri/Camera"
+        ], function(esriConfig, WebScene, SceneView, Home, Camera) {
+            // Set API key from shared config
+            esriConfig.apiKey = window.arcgisConfig.apiKey;
+            
+            const arcgisScene = document.querySelector("arcgis-scene");
+            arcgisScene.addEventListener("arcgisViewReadyChange", () => {
+                const view = arcgisScene.view;
+                
+                view.camera = new Camera({
+                    position: {
+                        x: -76.0, 
+                        y: 37.0,  
+                        z: 500000, 
+                        spatialReference: {
+                            wkid: 4326
+                        }
+                    },
+                    heading: 315,  
+                    tilt: 30,      
+                    fov: 70        
+                });
+                
+                // Set lighting
+                view.environment.lighting = {
+                    type: "sun",
+                    date: new Date(),
+                    directShadowsEnabled: true
+                };
+                
+                // Set atmosphere
+                view.environment.atmosphere = {
+                    quality: "high"
+                };
+            });
+        });
+    </script>
+</body>
+</html> 

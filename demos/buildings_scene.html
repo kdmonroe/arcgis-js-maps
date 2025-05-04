@@ -1,0 +1,51 @@
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>City of Aurora Buildings</title>
+    <style>
+        html,
+        body {
+           background-color: var(--calcite-ui-foreground-2);
+           padding: 0;
+           margin: 0;
+           width: 100vw;
+           height: 100vh;
+        }
+    </style>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/2.13.2/calcite.css" />
+    <script type="module" src="https://js.arcgis.com/calcite-components/2.13.2/calcite.esm.js"></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.31/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.31/"></script>
+    <script
+       type="module"
+       src="https://js.arcgis.com/map-components/4.31/arcgis-map-components.esm.js"
+     ></script>
+  </head>
+  <body>
+      <arcgis-scene item-id="029fffdc707b4a0abfeac2ff81e92397" basemap="arcgis/topographic">
+         <arcgis-zoom position="top-left"></arcgis-zoom>
+      </arcgis-scene>
+      <script src="../shared/config.js"></script>
+      <script>
+         require(["esri/config", "esri/views/SceneView"], function(esriConfig, SceneView) {
+            esriConfig.apiKey = window.arcgisConfig.apiKey;
+            const arcgisScene = document.querySelector("arcgis-scene");
+            arcgisScene.addEventListener("arcgisViewReadyChange", () => {
+                const view = arcgisScene.view;
+                view.camera = {
+                    position: [
+                        -104.81999871,
+                        39.70848386,
+                        1805.86084],
+                    heading: 77.40,
+                    tilt: 77.25};
+                view.environment.lighting = {
+                    type: "sun",
+                    date: new Date("January 1, 2022 15:00:00 UTC"),
+                };
+                view.environment.lighting.directShadowsEnabled = true;
+            });
+         });
+      </script>
+  </body>
+</html>
