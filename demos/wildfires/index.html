@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>     
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wildfires Map | ArcGIS JS Maps</title>
+    
+    <!-- Calcite Components -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
+    
+    <!-- ArcGIS CSS -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css" />
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <style>
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--calcite-sans-family);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1000;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            opacity: 0.8;
+        }
+        
+        .main-shell {
+            flex: 1;
+            width: 100%;
+        }
+        
+        html, body, calcite-shell, .main-shell {
+            height: 100%;
+            min-height: 0;
+        }
+    </style>
+</head>     
+
+<body>  
+    <div class="header">
+        <a href="../../index.html" class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Demos
+        </a>
+        <h1>Wildfires Map</h1>
+        <div></div> <!-- Empty div for flex spacing -->
+    </div>
+    
+    <calcite-shell class="main-shell">
+        <!-- Map container -->
+        <div id="viewDiv" class="h-full w-full relative"></div>
+        
+        <!-- Layer info panel (initially hidden) -->
+        <div id="layer-info-panel" class="layer-info-panel">
+            <div class="layer-info-header">
+                <h3>Layer Information</h3>
+                <calcite-button id="close-info-button" appearance="transparent" icon-start="x" scale="s"></calcite-button>
+            </div>
+            <div id="layer-info" class="layer-info-content"></div>
+        </div>
+    </calcite-shell>
+
+    <!-- ArcGIS JavaScript API -->
+    <script defer src="https://js.arcgis.com/4.28/"></script>
+    
+    <!-- Application JavaScript -->
+    <script defer src="js/map.js"></script>
+</body>
+</html> 
