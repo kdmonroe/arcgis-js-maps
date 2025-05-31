@@ -1,0 +1,261 @@
+/* Main layout */
+html, body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Map container */
+#viewDiv {
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+/* Calcite Shell customization */
+calcite-shell {
+    --calcite-ui-brand: #e05e1f;
+    --calcite-ui-brand-hover: #c84c15;
+}
+
+/* Remove focus outline */
+.esri-view .esri-view-surface--inset-outline:focus::after {
+    outline: none !important;
+}
+
+/* Layer list customization */
+.esri-layer-list {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: 80vh;
+}
+
+.esri-layer-list__item {
+    padding: 8px 12px;
+}
+
+.esri-layer-list__item-container {
+    padding: 6px 0;
+}
+
+.esri-layer-list__item-title {
+    font-weight: 500;
+}
+
+/* Layer transparency controls in panel */
+.layer-transparency-control {
+    padding: 12px;
+}
+
+.layer-slider-label {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.layer-slider-container {
+    width: 100%;
+}
+
+calcite-slider {
+    width: 100%;
+    --calcite-ui-brand: #e05e1f;
+}
+
+/* Layer actions styling */
+.esri-layer-list__item-actions-menu {
+    padding: 0 4px;
+}
+
+.esri-layer-list__item-actions-menu-item {
+    color: #323232;
+    transition: background-color 0.2s ease;
+}
+
+.esri-layer-list__item-actions-menu-item:hover {
+    background-color: #f5f5f5;
+}
+
+.esri-layer-list__item-actions-menu-item--active {
+    color: var(--calcite-ui-brand);
+}
+
+/* Data table container */
+.data-table-container {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    max-height: 400px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Data table header */
+.data-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.data-table-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--calcite-ui-brand);
+}
+
+/* Data table content */
+.data-table-content {
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+    max-height: 350px;
+}
+
+/* Feature data table */
+.feature-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.feature-data-table thead {
+    position: sticky;
+    top: 0;
+    background-color: #f0f0f0;
+    z-index: 10;
+}
+
+.feature-data-table th {
+    padding: 10px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+    position: relative;
+}
+
+.feature-data-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    white-space: nowrap;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.feature-data-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Record info */
+.record-info {
+    padding: 10px;
+    background-color: #f5f5f5;
+    font-size: 13px;
+    color: #666;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* No data message */
+.no-data-message {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+/* Error message */
+.error-message {
+    padding: 16px;
+    background-color: #fff0f0;
+    color: #d9534f;
+    border-left: 4px solid #d9534f;
+    margin: 10px;
+}
+
+/* Layer info panel */
+.layer-info-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+    max-width: 90%;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: none;
+}
+
+.layer-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #f5f5f5;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.layer-info-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.layer-info-content {
+    padding: 16px;
+}
+
+.layer-info-content h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--calcite-ui-brand);
+}
+
+.layer-info-content p {
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+.layer-info-content a {
+    color: var(--calcite-ui-brand);
+    text-decoration: none;
+}
+
+.layer-info-content a:hover {
+    text-decoration: underline;
+}
+
+/* Expand widget customization */
+.esri-expand__container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.esri-expand .esri-widget--panel {
+    max-height: 500px;
+}
+
+/* Make map controls more compact */
+.esri-ui-corner .esri-component {
+    margin-bottom: 6px;
+} 

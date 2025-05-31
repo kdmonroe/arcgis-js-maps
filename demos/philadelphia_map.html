@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <title>Philadelphia County Boundaries | ArcGIS JS Maps</title>
+    
+    <!-- Add empty script tag -->
+    <script></script>
+    
+    <!-- Calcite Components -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
+    
+    <!-- ArcGIS Maps SDK for JavaScript with defer -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <script defer src="https://js.arcgis.com/4.32/"></script>
+    
+    <!-- Load Map components from CDN with defer -->
+    <script defer type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
+    
+    <!-- Font Awesome for additional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--calcite-sans-family);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            opacity: 0.8;
+        }
+        
+        .map-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+        
+        arcgis-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .legend {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border: 1px solid #ddd;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../index.html" class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Demos
+        </a>
+        <h1>Philadelphia County Boundaries</h1>
+        <div></div> <!-- Empty div for flex spacing -->
+    </div>
+    
+    <div class="map-container">
+        <arcgis-map center="-75.1652, 39.9526" zoom="11">
+            <arcgis-zoom position="top-left"></arcgis-zoom>
+        </arcgis-map>
+        <div class="legend">
+            <h3 style="margin-top: 0; margin-bottom: 10px;">Legend</h3>
+            <div class="legend-item">
+                <div class="legend-color" id="legend-county-boundary" style="border: 2px solid #FF0000; background-color: transparent;"></div>
+                <span>County Boundary</span>
+            </div>
+             <div class="legend-item">
+                <div class="legend-color" id="legend-neighborhoods" style="background-color: rgba(0, 120, 202, 0.5); border: 1px solid #0078CA;"></div>
+                <span>Neighborhoods</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function initializeMap(apiKey) {
+            require([
+                "esri/config", 
+                "esri/Map", 
+                "esri/layers/GeoJSONLayer", 
+                "esri/layers/GraphicsLayer",
+                "esri/Graphic",
+                "esri/geometry/geometryEngine",
+                "esri/renderers/SimpleRenderer",
+                "esri/symbols/SimpleFillSymbol",
+                "esri/symbols/SimpleLineSymbol"
+            ], (
+                esriConfig, 
+                Map, 
+                GeoJSONLayer, 
+                GraphicsLayer, 
+                Graphic, 
+                geometryEngine,
+                SimpleRenderer,
+                SimpleFillSymbol,
+                SimpleLineSymbol
+            ) => {
+                esriConfig.apiKey = apiKey;
+                
+                const arcgisMapElement = document.querySelector("arcgis-map");
+                
+                // Layer for the calculated county boundary
+                const countyBoundaryGraphicsLayer = new GraphicsLayer();
+
+                // Renderer for neighborhoods
+                const neighborhoodsRenderer = new SimpleRenderer({
+                    symbol: new SimpleFillSymbol({
+                        color: [0, 120, 202, 0.5], // Semi-transparent blue
+                        outline: {
+                            color: [0, 120, 202, 0.8], // Darker blue outline
+                            width: 1
+                        }
+                    })
+                });
+
+                const neighborhoodsLabelClass = {
+                    labelExpressionInfo: { expression: "$feature.listname" },
+                    symbol: {
+                        type: "text",
+                        color: "#ffffff",
+                        haloColor: "#222",
+                        haloSize: "1.5px",
+                        font: {
+                            family: "Avenir Next LT Pro",
+                            size: 12,
+                            weight: "bold"
+                        }
+                    },
+                    labelPlacement: "always-horizontal"
+                };
+
+                // GeoJSONLayer for Philadelphia neighborhoods
+                const geojsonNeighborhoodsLayer = new GeoJSONLayer({
+                    url: "https://raw.githubusercontent.com/opendataphilly/open-geo-data/master/philadelphia-neighborhoods/philadelphia-neighborhoods.geojson",
+                    title: "Philadelphia Neighborhoods",
+                    renderer: neighborhoodsRenderer,
+                    labelingInfo: [neighborhoodsLabelClass],
+                    popupTemplate: {
+                        title: "{listname}",
+                        content: `
+                          <b>Neighborhood:</b> {listname}<br>
+                          <b>Official Name:</b> {name}<br>
+                          <b>Area:</b> {shape_area} m²<br>
+                          <b>Perimeter:</b> {shape_leng} m
+                        `
+                    }
+                });
+                
+                const map = new Map({
+                    basemap: "streets-night-vector", // Using a night navigation basemap
+                    layers: [geojsonNeighborhoodsLayer, countyBoundaryGraphicsLayer]
+                });
+                
+                arcgisMapElement.map = map;
+                
+                geojsonNeighborhoodsLayer.when(() => {
+                    return geojsonNeighborhoodsLayer.queryFeatures();
+                })
+                .then(results => {
+                    const neighborhoodGeometries = results.features.map(feature => feature.geometry);
+                    
+                    if (neighborhoodGeometries.length > 0) {
+                        // Union all neighborhood geometries to create the county boundary
+                        const countyBoundaryGeometry = geometryEngine.union(neighborhoodGeometries);
+                        
+                        if (countyBoundaryGeometry) {
+                            // Create a symbol for the county boundary outline
+                            const countyBoundarySymbol = new SimpleLineSymbol({
+                                color: [255, 0, 0, 1], // Red color for distinct outline
+                                width: "2.5px"
+                            });
+                            
+                            // Create a graphic for the county boundary
+                            const countyBoundaryGraphic = new Graphic({
+                                geometry: countyBoundaryGeometry,
+                                symbol: countyBoundarySymbol
+                            });
+                            
+                            // Add the county boundary graphic to its dedicated layer
+                            countyBoundaryGraphicsLayer.add(countyBoundaryGraphic);
+                        }
+                    }
+                })
+                .catch(error => {
+                    alert("Could not load or process Philadelphia neighborhood data. See console for details.");
+                });
+
+                arcgisMapElement.addEventListener("arcgisViewReadyChange", function(event) {
+                    if (event.target.ready) {
+                        // You can add view-specific logic here if needed
+                    }
+                });
+            });
+        }
+        
+        function loadConfig() {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadConfig);
+                return;
+            }
+            
+            const baseUrl = window.location.hostname === 'kdmonroe.github.io' 
+                ? '/arcgis-js-maps/shared/config.js' 
+                : '../shared/config.js';
+            
+            console.log("Loading config from:", baseUrl);
+            
+            const configScript = document.createElement('script');
+            configScript.src = baseUrl;
+            
+            configScript.onload = function() {
+                if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+                    initializeMap(window.arcgisConfig.apiKey);
+                } else {
+                    alert("API key not found. Please check your configuration.");
+                }
+            };
+            
+            configScript.onerror = function() {
+                const altPath = window.location.hostname === 'kdmonroe.github.io' 
+                    ? '../shared/config.js'
+                    : '/arcgis-js-maps/shared/config.js';
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = altPath;
+                fallbackScript.onload = function() {
+                    if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+                        initializeMap(window.arcgisConfig.apiKey);
+                    } else {
+                        alert("API key not found. Please check your configuration.");
+                    }
+                };
+                fallbackScript.onerror = function() {
+                    alert("Failed to load configuration. Please check the console for details.");
+                };
+                document.head.appendChild(fallbackScript);
+            };
+            document.head.appendChild(configScript);
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadConfig);
+        } else {
+            loadConfig();
+        }
+    </script>
+</body>
+</html> 

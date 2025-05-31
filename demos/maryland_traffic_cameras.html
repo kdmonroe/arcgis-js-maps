@@ -1,51 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <title>Maryland Traffic Cameras</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maryland Traffic Cameras - ArcGIS JS Maps Demos</title>
+    
+    <!-- Calcite Components -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
+    
+    <!-- ArcGIS CSS -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/dark/main.css" />
+    
+    <!-- Font Awesome for additional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        html,
-        body {
-            background-color: var(--calcite-ui-foreground-2);
-            padding: 0;
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+        }
+        
+        * {
             margin: 0;
-            width: 100vw;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--calcite-sans-family);
+            display: flex;
+            flex-direction: column;
             height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            opacity: 0.8;
+        }
+        
+        .map-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+        
+        #viewDiv {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .esri-view .esri-view-surface--inset-outline:focus::after {
+            outline: none !important;
         }
     </style>
-    <!-- Load Calcite components from CDN -->
-    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/3.0.3/calcite.css" />
-    <script type="module" src="https://js.arcgis.com/calcite-components/3.0.3/calcite.esm.js"></script>
-    <!-- Load the ArcGIS Maps SDK for JavaScript from CDN -->
-    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/dark/main.css" />
-    <script src="https://js.arcgis.com/4.32/"></script>
-    <!-- Load Map components from CDN-->
-    <script
-        type="module"
-        src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"
-    ></script>
 </head>
+
 <body>
-    <!-- Create a scene with the item ID for Maryland Traffic Cameras -->
-    <arcgis-scene item-id="9b73878c35274b0599ab178c24019a44" basemap="dark-gray-3d" ground="world-elevation">
-        <!-- Use arcgis-home component instead of Home widget -->
-        <arcgis-home position="top-left"></arcgis-home>
-        <arcgis-zoom position="top-left"></arcgis-zoom>
-        <arcgis-navigation-toggle position="top-left"></arcgis-navigation-toggle>
-    </arcgis-scene>
+    <div class="header">
+        <a href="../index.html" class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Demos
+        </a>
+        <h1>Maryland Traffic Cameras</h1>
+        <div></div> <!-- Empty div for flex spacing -->
+    </div>
     
+    <div class="map-container">
+        <div id="viewDiv"></div>
+    </div>
+    
+    <!-- ArcGIS JavaScript API -->
+    <script src="https://js.arcgis.com/4.28/"></script>
     <script>
-        // Dynamically determine the base URL for config.js
-        const baseUrl = window.location.hostname === 'kdmonroe.github.io' 
-          ? '/arcgis-js-maps/shared/config.js' 
-          : '../shared/config.js';
-        
-        // Create and load the script element dynamically
-        const configScript = document.createElement('script');
-        configScript.src = baseUrl;
-        configScript.onload = function() {
-            // Initialize ArcGIS only after config is loaded
+        // Initialize the scene when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
             require([
                 "esri/config",
                 "esri/WebScene",
@@ -53,42 +110,69 @@
                 "esri/widgets/Home",
                 "esri/Camera"
             ], function(esriConfig, WebScene, SceneView, Home, Camera) {
-                // Set API key from shared config
-                esriConfig.apiKey = window.arcgisConfig.apiKey;
+                // Dynamically determine the base URL for config.js
+                const baseUrl = window.location.hostname === 'kdmonroe.github.io' 
+                  ? '/arcgis-js-maps/shared/config.js' 
+                  : '../shared/config.js';
                 
-                const arcgisScene = document.querySelector("arcgis-scene");
-                arcgisScene.addEventListener("arcgisViewReadyChange", () => {
-                    const view = arcgisScene.view;
+                // Create and load the script element dynamically
+                const configScript = document.createElement('script');
+                configScript.src = baseUrl;
+                configScript.onload = function() {
+                    // Set API key from shared config
+                    if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+                        esriConfig.apiKey = window.arcgisConfig.apiKey;
+                    }
                     
-                    view.camera = new Camera({
-                        position: {
-                            x: -76.0, 
-                            y: 37.0,  
-                            z: 500000, 
-                            spatialReference: {
-                                wkid: 4326
-                            }
-                        },
-                        heading: 315,  
-                        tilt: 30,      
-                        fov: 70        
+                    // Load the web scene
+                    const webScene = new WebScene({
+                        portalItem: {
+                            id: "9b73878c35274b0599ab178c24019a44"
+                        }
                     });
                     
-                    // Set lighting
-                    view.environment.lighting = {
-                        type: "sun",
-                        date: new Date(),
-                        directShadowsEnabled: true
-                    };
+                    // Create the SceneView
+                    const view = new SceneView({
+                        container: "viewDiv",
+                        map: webScene,
+                        environment: {
+                            lighting: {
+                                type: "sun",
+                                date: new Date(),
+                                directShadowsEnabled: true
+                            },
+                            atmosphere: {
+                                quality: "high"
+                            }
+                        }
+                    });
                     
-                    // Set atmosphere
-                    view.environment.atmosphere = {
-                        quality: "high"
-                    };
-                });
+                    // Add a home button
+                    const homeWidget = new Home({
+                        view: view
+                    });
+                    view.ui.add(homeWidget, "top-left");
+                    
+                    // Set initial camera position when view is ready
+                    view.when(function() {
+                        view.camera = new Camera({
+                            position: {
+                                x: -76.0, 
+                                y: 37.0,  
+                                z: 500000, 
+                                spatialReference: {
+                                    wkid: 4326
+                                }
+                            },
+                            heading: 315,  
+                            tilt: 30,      
+                            fov: 70        
+                        });
+                    });
+                };
+                document.head.appendChild(configScript);
             });
-        };
-        document.head.appendChild(configScript);
+        });
     </script>
 </body>
 </html> 

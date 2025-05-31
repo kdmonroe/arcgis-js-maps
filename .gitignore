@@ -1,6 +1,9 @@
-README-GithubPages.md
+*.mdc
+*/shared
 # SpecStory explanation file
 .specstory/.what-is-this.md
 .specstory/
 .DS_Store
 .cursorindexingignore
+shared/map_template.html
+README-GithubPages.md

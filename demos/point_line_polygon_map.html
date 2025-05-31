@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <title>Point, Line, and Polygon Demo | ArcGIS JS Maps</title>
+    
+    <!-- Add empty script tag -->
+    <script></script>
+    
+    <!-- Calcite Components -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
+    
+    <!-- ArcGIS Maps SDK for JavaScript with defer -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <script defer src="https://js.arcgis.com/4.32/"></script>
+    
+    <!-- Load Map components from CDN with defer -->
+    <script defer type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
+    
+    <!-- Font Awesome for additional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Geometry Renderer with defer -->
+    <script defer src="geometry_renderer.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--calcite-sans-family);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            opacity: 0.8;
+        }
+        
+        .map-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+        
+        arcgis-map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .legend {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .point-color {
+            background-color: rgb(226, 119, 40);
+            border-radius: 50%;
+        }
+        
+        .line-color {
+            background-color: rgb(226, 119, 40);
+            height: 4px;
+            margin-top: 8px;
+        }
+        
+        .polygon-color {
+            background-color: rgba(227, 139, 79, 0.8);
+        }
+        
+        /* Styling panel additional styles */
+        .styling-panel {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../index.html" class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Demos
+        </a>
+        <h1>Point, Line, and Polygon Demo</h1>
+        <div></div> <!-- Empty div for flex spacing -->
+    </div>
+    
+    <div class="map-container">
+        <arcgis-map center="-118.805, 34.027" zoom="13">
+            <arcgis-zoom position="top-left"></arcgis-zoom>
+        </arcgis-map>
+        <div class="legend">
+            <h3 style="margin-top: 0; margin-bottom: 10px;">Symbology Legend</h3>
+            <div class="legend-item">
+                <div class="legend-color point-color" id="legend-point"></div>
+                <span>Point</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color line-color" id="legend-line"></div>
+                <span>Line</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color polygon-color" id="legend-polygon"></div>
+                <span>Polygon</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Function to initialize the map with the api key
+        function initializeMap(apiKey) {
+            require(["esri/config", "esri/Graphic", "esri/Map", "esri/layers/GraphicsLayer"], (esriConfig, Graphic, Map, GraphicsLayer) => {
+                // Set API key
+                esriConfig.apiKey = apiKey;
+                
+                const arcgisMap = document.querySelector("arcgis-map");
+                const graphicsLayer = new GraphicsLayer();
+                
+                arcgisMap.map = new Map({
+                    basemap: "gray-3d",
+                    layers: [graphicsLayer]
+                });
+                
+                // Create a point
+                const point = {
+                    type: "point",
+                    longitude: -118.80657463861,
+                    latitude: 34.0005930608889
+                };
+                const simpleMarkerSymbol = {
+                    type: "simple-marker",
+                    color: [226, 119, 40], // Orange
+                    outline: {
+                        color: [255, 255, 255], // White
+                        width: 1
+                    }
+                };
+                
+                const pointGraphic = new Graphic({
+                    geometry: point,
+                    symbol: simpleMarkerSymbol,
+                    attributes: {
+                        Name: "Point Feature",
+                        Description: "This is a point marker"
+                    },
+                    popupTemplate: {
+                        title: "{Name}",
+                        content: "{Description}"
+                    }
+                });
+                graphicsLayer.add(pointGraphic);
+                
+                // Create a line geometry
+                const polyline = {
+                    type: "polyline",
+                    paths: [
+                        [-118.821527826096, 34.0139576938577], //Longitude, latitude
+                        [-118.814893761649, 34.0080602407843], //Longitude, latitude
+                        [-118.808878330345, 34.0016642996246] //Longitude, latitude
+                    ]
+                };
+                const simpleLineSymbol = {
+                    type: "simple-line",
+                    color: [226, 119, 40], // Orange
+                    width: 2
+                };
+                
+                const polylineGraphic = new Graphic({
+                    geometry: polyline,
+                    symbol: simpleLineSymbol,
+                    attributes: {
+                        Name: "Line Feature",
+                        Description: "This is a polyline"
+                    },
+                    popupTemplate: {
+                        title: "{Name}",
+                        content: "{Description}"
+                    }
+                });
+                graphicsLayer.add(polylineGraphic);
+                
+                // Create a polygon geometry
+                const polygon = {
+                    type: "polygon",
+                    rings: [
+                        [-118.818984489994, 34.0137559967283], //Longitude, latitude
+                        [-118.806796597377, 34.0215816298725], //Longitude, latitude
+                        [-118.791432890735, 34.0163883241613], //Longitude, latitude
+                        [-118.79596686535, 34.008564864635], //Longitude, latitude
+                        [-118.808558110679, 34.0035027131376] //Longitude, latitude
+                    ]
+                };
+                
+                const simpleFillSymbol = {
+                    type: "simple-fill",
+                    color: [227, 139, 79, 0.8], // Orange, opacity 80%
+                    outline: {
+                        color: [255, 255, 255],
+                        width: 1
+                    }
+                };
+                
+                const polygonGraphic = new Graphic({
+                    geometry: polygon,
+                    symbol: simpleFillSymbol,
+                    attributes: {
+                        Name: "Polygon Feature",
+                        Description: "This is a polygon area"
+                    },
+                    popupTemplate: {
+                        title: "{Name}",
+                        content: "{Description}"
+                    }
+                });
+                graphicsLayer.add(polygonGraphic);
+                
+                // Initialize the geometry renderer once the map view is ready
+                arcgisMap.addEventListener("arcgisViewReadyChange", function(event) {
+                    console.log("View ready change event:", event.detail);
+                    
+                    // Delay initialization to ensure graphics are loaded
+                    setTimeout(() => {
+                        try {
+                            // Initialize the geometry renderer with the map element
+                            window.geometryRenderer = new GeometryRenderer(arcgisMap);
+                            console.log("GeometryRenderer initialized successfully");
+                            
+                            // Force refresh the legend after a delay to ensure it's updated
+                            setTimeout(() => {
+                                if (window.geometryRenderer) {
+                                    console.log("Forcing initial legend update");
+                                    window.geometryRenderer.updateLegend();
+                                }
+                            }, 1500);
+                            
+                            // Set up the styling button
+                            const stylingButton = document.getElementById('show-styling-button');
+                            if (stylingButton) {
+                                stylingButton.addEventListener('click', () => {
+                                    const panel = document.querySelector('#geometry-styling-controls calcite-panel');
+                                    if (panel) {
+                                        panel.closed = false;
+                                        
+                                        // Also refresh the legend when panel is opened
+                                        if (window.geometryRenderer) {
+                                            window.geometryRenderer.updateLegend();
+                                        }
+                                    } else {
+                                        console.error("Styling panel not found in DOM");
+                                        // Try to recreate controls if panel not found
+                                        if (window.geometryRenderer) {
+                                            window.geometryRenderer.createCalciteControls();
+                                        }
+                                    }
+                                });
+                            }
+                        } catch (error) {
+                            console.error("Error initializing GeometryRenderer:", error);
+                        }
+                    }, 1000); // 1 second delay
+                });
+            });
+        }
+        
+        // Modified loadConfig function
+        function loadConfig() {
+            // Ensure document is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadConfig);
+                return;
+            }
+            
+            // Use the specific domain name instead of generic github.io check
+            const baseUrl = window.location.hostname === 'kdmonroe.github.io' 
+                ? '/arcgis-js-maps/shared/config.js' 
+                : '../shared/config.js';
+            
+            console.log("Loading config from:", baseUrl);
+            
+            // Create and load the script element
+            const configScript = document.createElement('script');
+            configScript.src = baseUrl;
+            
+            configScript.onload = function() {
+                console.log("Config loaded successfully");
+                if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+                    initializeMap(window.arcgisConfig.apiKey);
+                } else {
+                    console.error("Config loaded but API key not found");
+                    alert("API key not found. Please check your configuration.");
+                }
+            };
+            
+            configScript.onerror = function() {
+                console.error("Failed to load config from: " + baseUrl);
+                // Try the alternate path as fallback
+                const altPath = window.location.hostname === 'kdmonroe.github.io' 
+                    ? '../shared/config.js'  // Try relative path as fallback
+                    : '/arcgis-js-maps/shared/config.js';  // Try absolute path as fallback
+                
+                console.log("Attempting fallback config load from:", altPath);
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = altPath;
+                
+                fallbackScript.onload = function() {
+                    console.log("Fallback config loaded successfully");
+                    if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+                        initializeMap(window.arcgisConfig.apiKey);
+                    } else {
+                        console.error("Fallback config loaded but API key not found");
+                        alert("API key not found. Please check your configuration.");
+                    }
+                };
+                
+                fallbackScript.onerror = function() {
+                    console.error("All config loading attempts failed");
+                    alert("Failed to load configuration. Please check the console for details.");
+                };
+                
+                document.head.appendChild(fallbackScript);
+            };
+            
+            document.head.appendChild(configScript);
+        }
+        
+        // Start the loading process with document ready check
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadConfig);
+        } else {
+            loadConfig();
+        }
+    </script>
+</body>
+</html> 
