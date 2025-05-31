@@ -1,15 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
     <title>City of Aurora Buildings</title>
+    
+    <!-- Font Awesome for additional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        html,
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-           background-color: var(--calcite-ui-foreground-2);
-           padding: 0;
-           margin: 0;
-           width: 100vw;
-           height: 100vh;
+            font-family: var(--calcite-sans-family);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background-color: var(--calcite-ui-foreground-2);
+        }
+        
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            opacity: 0.8;
+        }
+        
+        .map-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+        
+        arcgis-scene {
+            width: 100%;
+            height: 100%;
         }
     </style>
     <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/2.13.2/calcite.css" />
@@ -22,9 +83,20 @@
      ></script>
   </head>
   <body>
-      <arcgis-scene item-id="029fffdc707b4a0abfeac2ff81e92397" basemap="dark-gray-3d">
-         <arcgis-zoom position="top-left"></arcgis-zoom>
-      </arcgis-scene>
+      <div class="header">
+          <a href="../index.html" class="back-button">
+              <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Demos
+          </a>
+          <h1>City of Aurora Buildings</h1>
+          <div></div> <!-- Empty div for flex spacing -->
+      </div>
+      
+      <div class="map-container">
+          <arcgis-scene item-id="029fffdc707b4a0abfeac2ff81e92397" basemap="dark-gray-3d">
+             <arcgis-zoom position="top-left"></arcgis-zoom>
+          </arcgis-scene>
+      </div>
+      
       <script>
          // Dynamically determine the base URL for config.js
          const baseUrl = window.location.hostname === 'kdmonroe.github.io' 
