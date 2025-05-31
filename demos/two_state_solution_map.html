@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <title>Two-State Solution Map | ArcGIS JS Maps</title>
+    
+    <!-- Add empty script tag for stable DOM reference -->
+    <script></script>
+    
+    <!-- Calcite Components -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
+    
+    <!-- ArcGIS Maps SDK for JavaScript with defer -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <script defer src="https://js.arcgis.com/4.32/"></script>
+    
+    <!-- Load Map components from CDN with defer -->
+    <script defer type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
+    
+    <!-- Font Awesome for additional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+            --palestine-color: rgba(0, 128, 0, 0.6); /* Green for Palestine */
+            --palestine-outline-color: rgba(0, 100, 0, 0.8);
+            --israel-color: rgba(0, 0, 255, 0.6);   /* Blue for Israel */
+            --israel-outline-color: rgba(0, 0, 200, 0.8);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--calcite-sans-family);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            opacity: 0.8;
+        }
+        
+        .map-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+        
+        arcgis-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .legend {
+            position: absolute;
+            top: 80px;
+            left: 15px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 200px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .data-sources {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            max-width: 350px;
+            z-index: 1000;
+        }
+
+        .data-sources calcite-notice {
+            --calcite-notice-spacing-token-small: 0.5rem;
+        }
+
+        .data-sources calcite-block {
+            --calcite-block-padding: 0.75rem;
+        }
+
+        .source-link {
+            color: var(--calcite-color-brand);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .source-link:hover {
+            text-decoration: underline;
+        }
+
+        .basemap-toggle-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 1001;
+        }
+
+        .basemap-gallery-container {
+            position: absolute;
+            top: 60px;
+            right: 15px;
+            z-index: 1000;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .basemap-gallery-container.visible {
+            display: block;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../index.html" class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Demos
+        </a>
+        <h1>Two-State Solution Map</h1>
+        <div></div> <!-- Empty div for flex spacing -->
+    </div>
+    
+    <div class="map-container">
+        <arcgis-map basemap="satellite" center="34.8, 31.5" zoom="6">
+            <arcgis-zoom position="top-left"></arcgis-zoom>
+        </arcgis-map>
+        
+        <div class="legend">
+            <h3 style="margin-top: 0; margin-bottom: 10px;">Legend</h3>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: var(--palestine-color); border: 1px solid var(--palestine-outline-color);"></div>
+                <span>Palestine (West Bank & Gaza)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: var(--israel-color); border: 1px solid var(--israel-outline-color);"></div>
+                <span>Israel</span>
+            </div>
+        </div>
+        
+        <div class="data-sources">
+            <calcite-block heading="Data Sources" description="Geographic boundary data sources" open collapsible>
+                <calcite-icon slot="icon" icon="information"></calcite-icon>
+                <div style="padding: 8px 0;">
+                    <div style="margin-bottom: 6px;">
+                        <strong>Palestine:</strong> <a href="https://github.com/sepans/palestine_geodata" target="_blank" rel="noopener" class="source-link">sepans/palestine_geodata</a>
+                    </div>
+                    <div style="margin-bottom: 6px;">
+                        <strong>Israel:</strong> <a href="https://github.com/glynnbird/countriesgeojson" target="_blank" rel="noopener" class="source-link">glynnbird/countriesgeojson</a>
+                    </div>
+                    <div style="font-size: 12px; color: var(--calcite-color-text-3); margin-top: 8px;">
+                        This map displays publicly available GeoJSON boundary data for educational and informational purposes.
+                    </div>
+                </div>
+            </calcite-block>
+        </div>
+    </div>
+    
+    <script>
+    // Function to load layers once the map is ready
+    function loadLayers(apiKey) {
+      require([
+        "esri/config",
+        "esri/layers/GeoJSONLayer",
+        "esri/renderers/SimpleRenderer",
+        "esri/symbols/SimpleFillSymbol",
+        "esri/layers/GraphicsLayer",
+        "esri/Graphic",
+        "esri/widgets/BasemapGallery",
+        "esri/widgets/Expand"
+      ], function(
+        esriConfig,
+        GeoJSONLayer,
+        SimpleRenderer,
+        SimpleFillSymbol,
+        GraphicsLayer,
+        Graphic,
+        BasemapGallery,
+        Expand
+      ) {
+        esriConfig.apiKey = apiKey;
+        
+        // Get map component
+        const arcgisMap = document.querySelector("arcgis-map");
+        
+        if (arcgisMap) {
+          arcgisMap.addEventListener("arcgisViewReadyChange", function(event) {
+            if (!event.target.ready) return;
+            try {
+              // --- Add BasemapGallery Widget ---
+              const basemapGallery = new BasemapGallery({
+                view: event.target.view
+              });
+              
+              // Use Expand widget for collapsible gallery
+              const expand = new Expand({
+                view: event.target.view,
+                content: basemapGallery,
+                expandIconClass: "esri-icon-basemap",
+                group: "top-right",
+                expanded: false
+              });
+              event.target.view.ui.add(expand, "top-right");
+
+              // --- Israel Layer ---
+              const israelRenderer = new SimpleRenderer({
+                symbol: new SimpleFillSymbol({
+                  color: getComputedStyle(document.documentElement).getPropertyValue('--israel-color').trim(),
+                  outline: {
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--israel-outline-color').trim(),
+                    width: 1
+                  }
+                })
+              });
+              const israelLayer = new GeoJSONLayer({
+                url: "https://raw.githubusercontent.com/glynnbird/countriesgeojson/master/israel.geojson",
+                title: "Israel",
+                renderer: israelRenderer,
+                popupTemplate: {
+                  title: "Israel",
+                  content: "State of Israel."
+                }
+              });
+              event.target.map.add(israelLayer);
+
+              // --- Palestine Layer ---
+              const palestineRenderer = new SimpleRenderer({
+                symbol: new SimpleFillSymbol({
+                  color: getComputedStyle(document.documentElement).getPropertyValue('--palestine-color').trim(),
+                  outline: {
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--palestine-outline-color').trim(),
+                    width: 1
+                  }
+                })
+              });
+              const palestineLayer = new GeoJSONLayer({
+                url: "https://raw.githubusercontent.com/sepans/palestine_geodata/master/palestine.geo.json",
+                title: "Palestine (West Bank & Gaza)",
+                renderer: palestineRenderer,
+                popupTemplate: {
+                  title: "Territory: {NAME}",
+                  content: "Areas often referred to as Palestinian Territories (West Bank and Gaza Strip)."
+                }
+              });
+              event.target.map.add(palestineLayer);
+
+              // --- Labels Layer ---
+              const labelLayer = new GraphicsLayer();
+              const gazaLabel = new Graphic({
+                geometry: { type: "point", longitude: 34.47, latitude: 31.4 },
+                symbol: {
+                  type: "text", color: "#222", text: "Gaza",
+                  font: { size: 14, family: "Avenir Next LT Pro", weight: "bold" },
+                  haloColor: "#fff", haloSize: "2px"
+                }
+              });
+              const westBankLabel = new Graphic({
+                geometry: { type: "point", longitude: 35.3, latitude: 32.0 },
+                symbol: {
+                  type: "text", color: "#222", text: "West Bank",
+                  font: { size: 14, family: "Avenir Next LT Pro", weight: "bold" },
+                  haloColor: "#fff", haloSize: "2px"
+                }
+              });
+              const israelLabel = new Graphic({
+                geometry: { type: "point", longitude: 34.9, latitude: 31.8 },
+                symbol: {
+                  type: "text", color: "#003399", text: "Israel",
+                  font: { size: 16, family: "Avenir Next LT Pro", weight: "bold" },
+                  haloColor: "#fff", haloSize: "2px"
+                }
+              });
+              labelLayer.addMany([gazaLabel, westBankLabel, israelLabel]);
+              event.target.map.add(labelLayer);
+            } catch (error) {
+              console.error("Error loading map layers:", error);
+              alert("Could not load map layers. See console for details.");
+            }
+          });
+        }
+      });
+    }
+
+    // Config loader (mirrors toronto_roads.html logic)
+    function loadConfig() {
+      const baseUrl = window.location.hostname === 'kdmonroe.github.io' || window.location.hostname === 'kylemonroe.dev'
+        ? '/arcgis-js-maps/shared/config.js'
+        : '../shared/config.js';
+      console.log("Loading config from:", baseUrl);
+      const configScript = document.createElement('script');
+      configScript.src = baseUrl;
+      configScript.onload = function() {
+        if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+          // Wait for require to be available
+          function waitForRequire() {
+            if (typeof require !== 'undefined') {
+              loadLayers(window.arcgisConfig.apiKey);
+            } else {
+              setTimeout(waitForRequire, 100);
+            }
+          }
+          waitForRequire();
+        } else {
+          console.error("API key not found in config.js. Path:", baseUrl);
+          alert("API key not found. Please check your configuration (shared/config.js).");
+        }
+      };
+      configScript.onerror = function() {
+        const altBaseUrl = window.location.pathname.includes('/arcgis-js-maps/')
+          ? '../shared/config.js'
+          : '/arcgis-js-maps/shared/config.js';
+        console.warn("Failed to load config from primary path, trying alternative:", altBaseUrl);
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = altBaseUrl;
+        fallbackScript.onload = function() {
+          if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+            // Wait for require to be available
+            function waitForRequire() {
+              if (typeof require !== 'undefined') {
+                loadLayers(window.arcgisConfig.apiKey);
+              } else {
+                setTimeout(waitForRequire, 100);
+              }
+            }
+            waitForRequire();
+          } else {
+            console.error("API key not found in config.js using fallback path. Path attempted:", altBaseUrl);
+            alert("API key not found. Please check your configuration (shared/config.js).");
+          }
+        };
+        fallbackScript.onerror = function() {
+          console.error("Failed to load configuration from both primary and alternative paths.");
+          alert("Failed to load configuration. Please ensure 'shared/config.js' exists and is accessible.");
+        };
+        document.head.appendChild(fallbackScript);
+      };
+      document.head.appendChild(configScript);
+    }
+    
+    // Wait for DOM to be ready, then load config
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadConfig);
+    } else {
+      loadConfig();
+    }
+    </script>
+</body>
+</html> 
