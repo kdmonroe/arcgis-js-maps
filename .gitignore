@@ -1,10 +1,11 @@
 *.mdc
-shared/
+shared/config.js
+shared/map_template.html
+shared/arcgis-script-reference.js
 # SpecStory explanation file
 .specstory/.what-is-this.md
 .specstory/
 .DS_Store
 .cursorindexingignore
-shared/map_template.html
 README-GithubPages.md
 
