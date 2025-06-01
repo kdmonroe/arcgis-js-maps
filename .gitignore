@@ -1,5 +1,5 @@
 *.mdc
-*/shared
+shared/
 # SpecStory explanation file
 .specstory/.what-is-this.md
 .specstory/
@@ -7,3 +7,4 @@
 .cursorindexingignore
 shared/map_template.html
 README-GithubPages.md
+
