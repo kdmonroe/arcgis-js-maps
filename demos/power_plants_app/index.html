@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <title>US Power Plants Clustering - ArcGIS JS Maps Demos</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+    
+    <!-- Calcite Components -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/2.13.2/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/2.13.2/calcite.css" />
+    
+    <!-- ArcGIS Maps SDK for JavaScript -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.33/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.33/"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app">
+        <div class="header">
+            <div style="display: flex; align-items: center;">
+                <a href="../../index.html" class="back-button">
+                    ← Back
+                </a>
+                <h1>US Power Plants Clustering</h1>
+            </div>
+            <div class="header-controls">
+                <div class="cluster-count" title="The number of active clusters visible in the map's extent.">Clusters: <span id="clusterCount">0</span></div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="map-container">
+                <div id="viewDiv"></div>
+                <button id="sidebarToggle" class="sidebar-toggle" title="Toggle Sidebar">
+                    ☰
+                </button>
+            </div>
+            
+            <div id="sidebar" class="sidebar">
+                <div class="sidebar-header">
+                    <h3>Power Plant Analysis</h3>
+                    <p>Interactive clustering by fuel type</p>
+                </div>
+                
+                <div class="sidebar-content">
+                    <div id="status" class="status-message">Loading...</div>
+                    
+                    <div>
+                        <h4>How to Use</h4>
+                        <p>Zoom in/out to see clustering behavior. Clusters are colored by the predominant fuel type. Click on clusters or individual plants for details.</p>
+                    </div>
+                    
+                    <!-- State Breakdown Charts -->
+                    <div class="chart-section">
+                        <h4>State Analysis</h4>
+                        <div class="state-selector">
+                            <label for="stateSelect">Select a state:</label>
+                            <select id="stateSelect" class="state-dropdown">
+                                <option value="">Loading states...</option>
+                            </select>
+                        </div>
+                        
+                        <!-- State Summary Section -->
+                        <div id="stateSummary" class="state-summary">
+                            <!-- Summary content will be populated by JavaScript -->
+                        </div>
+                        
+                        <!-- Charts -->
+                        <div class="chart-container">
+                            <div class="chart-item">
+                                <h5>Capacity by Fuel Type (MW)</h5>
+                                <div id="capacityChart" class="chart"></div>
+                            </div>
+                            <div class="chart-item">
+                                <h5>Power Plants by Fuel Type</h5>
+                                <div id="plantCountChart" class="chart"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Filter Controls -->
+                        <div class="filter-section">
+                            <h4>Filter Power Plants</h4>
+                            
+                            <div class="filter-item">
+                                <label for="fuelTypeFilter">Fuel Type:</label>
+                                <select id="fuelTypeFilter">
+                                    <option value="">All Fuel Types</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-item">
+                                <label for="mwSlider">Total MW Capacity:</label>
+                                <div id="mwSlider" class="slider-container"></div>
+                                <div class="slider-values">
+                                    <span id="minMW">0</span> - <span id="maxMW">1000</span> MW
+                                </div>
+                            </div>
+                            
+                            <div class="filter-actions">
+                                <button id="clearFilters" class="clear-filters-btn">Clear Filters</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Data Source Information (Simplified) -->
+                        <div class="data-source-section">
+                            <h4>Data Source</h4>
+                            <div class="data-source-content">
+                                <div class="source-overview">
+                                    <p><strong>Source:</strong> U.S. Energy Information Administration (EIA)</p>
+                                    <p><strong>Dataset:</strong> <a href="https://hub.arcgis.com/datasets/fedmaps::power-plants-in-the-u-s--2/about" target="_blank">Power Plants in the United States</a></p>
+                                    <p id="plantCount">Loading plant count...</p>
+                                    <p><strong>Capacity Reference:</strong> Home power calculations based on national average of 168 homes per MW (<a href="https://www.seia.org/initiatives/whats-megawatt" target="_blank">according to SEIA</a>)</p>
+                                </div>
+                                <div id="dataSourceDetails">
+                                    <!-- Dynamic content will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Custom JS -->
+    <script src="js/app.js"></script>
+</body>
+</html> 
