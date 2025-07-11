@@ -1,5 +1,5 @@
-# ArcGIS JS Map Demos
+# ArcGIS JavaScript Maps
 
-A showcase of interactive map demos built with the ArcGIS JavaScript API and Calcite Design System. Explore a variety of real-world mapping examples, including 2D and 3D visualizations, live data, and custom symbology.
+A collection of maps built with the [ArcGIS JavaScript SDK](https://developers.arcgis.com/javascript/latest/) and [Calcite Design System](https://developers.arcgis.com/calcite-design-system/).
 
-[![ArcGIS JS Map Demos front page](images/front-page.png)](https://kdmonroe.github.io/arcgis-js-maps/)
+You can view the site live [here](https://kdmonroe.github.io/arcgis-js-maps/).
