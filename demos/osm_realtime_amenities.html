@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <title>OSM Real-Time Amenities Explorer | ArcGIS JS Maps</title>
+    
+    <!-- Stable script reference for ArcGIS SDK script injection -->
+    <script src="../shared/arcgis-script-reference.js"></script>
+    
+    <!-- Calcite Components -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
+    
+    <!-- ArcGIS Maps SDK for JavaScript -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.32/"></script>
+    
+    <!-- Load Map components from CDN with defer -->
+    <script defer type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--calcite-sans-family);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1001;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            opacity: 0.8;
+        }
+        
+        .map-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+        
+        arcgis-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 350px;
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+
+        .control-panel h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .amenity-category {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .amenity-category:hover {
+            background: #e9ecef;
+            border-color: var(--primary-color);
+        }
+
+        .amenity-category.active {
+            background: #e3f2fd;
+            border-color: var(--primary-color);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .category-icon {
+            font-size: 1.3rem;
+            width: 30px;
+            text-align: center;
+        }
+        
+        .category-name {
+            flex: 1;
+        }
+        
+        /* Color-coded text for each amenity type */
+        [data-amenity="restaurant"] .category-name {
+            color: rgb(231, 76, 60);
+        }
+        
+        [data-amenity="cafe"] .category-name {
+            color: rgb(155, 89, 182);
+        }
+        
+        [data-amenity="bar"] .category-name {
+            color: rgb(230, 126, 34);
+        }
+        
+        [data-amenity="pharmacy"] .category-name {
+            color: rgb(46, 204, 113);
+        }
+        
+        [data-amenity="hospital"] .category-name {
+            color: rgb(52, 152, 219);
+        }
+        
+        [data-amenity="bank"] .category-name {
+            color: rgb(241, 196, 15);
+        }
+        
+        [data-amenity="school"] .category-name {
+            color: rgb(149, 165, 166);
+        }
+        
+        [data-amenity="parking"] .category-name {
+            color: rgb(127, 140, 141);
+        }
+
+        .category-count {
+            margin-left: auto;
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+
+        .search-button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .search-button:hover {
+            background: var(--primary-hover);
+        }
+
+        .search-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #856404;
+        }
+
+        .stats-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .control-panel {
+                max-width: calc(100% - 30px);
+                max-height: 50vh;
+            }
+
+            .stats-panel {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../index.html" class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Demos
+        </a>
+        <h1>OSM Real-Time Amenities Explorer</h1>
+        <div></div>
+    </div>
+    
+    <div class="map-container">
+        <arcgis-map basemap="streets-navigation-vector" center="-77.0369, 38.9072" zoom="14">
+            <arcgis-zoom position="top-right"></arcgis-zoom>
+        </arcgis-map>
+        
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h3><i class="fas fa-filter"></i> Select Amenity Type</h3>
+            
+            <button class="search-button" id="searchButton" style="margin-top: 0; margin-bottom: 15px;">
+                <i class="fas fa-search"></i> Search This Area
+            </button>
+            
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i> Pan the map to a location, select amenity types, and click "Search This Area"
+            </div>
+
+            <div class="amenity-category" data-amenity="restaurant">
+                <div class="category-header">
+                    <span class="category-icon">🍽️</span>
+                    <span class="category-name">Restaurants</span>
+                    <span class="category-count">0</span>
+                </div>
+            </div>
+
+            <div class="amenity-category" data-amenity="cafe">
+                <div class="category-header">
+                    <span class="category-icon">☕</span>
+                    <span class="category-name">Cafés</span>
+                    <span class="category-count">0</span>
+                </div>
+            </div>
+
+            <div class="amenity-category" data-amenity="bar">
+                <div class="category-header">
+                    <span class="category-icon">🍺</span>
+                    <span class="category-name">Bars & Pubs</span>
+                    <span class="category-count">0</span>
+                </div>
+            </div>
+
+            <div class="amenity-category" data-amenity="pharmacy">
+                <div class="category-header">
+                    <span class="category-icon">💊</span>
+                    <span class="category-name">Pharmacies</span>
+                    <span class="category-count">0</span>
+                </div>
+            </div>
+
+            <div class="amenity-category" data-amenity="hospital">
+                <div class="category-header">
+                    <span class="category-icon">🏥</span>
+                    <span class="category-name">Hospitals</span>
+                    <span class="category-count">0</span>
+                </div>
+            </div>
+
+            <div class="amenity-category" data-amenity="bank">
+                <div class="category-header">
+                    <span class="category-icon">🏦</span>
+                    <span class="category-name">Banks & ATMs</span>
+                    <span class="category-count">0</span>
+                </div>
+            </div>
+
+            <div class="amenity-category" data-amenity="school">
+                <div class="category-header">
+                    <span class="category-icon">🏫</span>
+                    <span class="category-name">Schools</span>
+                    <span class="category-count">0</span>
+                </div>
+            </div>
+
+            <div class="amenity-category" data-amenity="parking">
+                <div class="category-header">
+                    <span class="category-icon">🅿️</span>
+                    <span class="category-name">Parking</span>
+                    <span class="category-count">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Panel -->
+        <div class="stats-panel">
+            <div class="stat-item">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">Total Found</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="areaSize">-</div>
+                <div class="stat-label">Search Area</div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div style="text-align: center;">
+                <div class="spinner"></div>
+                <p style="margin-top: 15px; color: var(--text-color); font-weight: 600;">
+                    Querying OpenStreetMap...
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    let selectedAmenities = new Set();
+    let currentLayers = new Map();
+
+    // Amenity configurations
+    const amenityConfig = {
+        restaurant: { color: [231, 76, 60], icon: '🍽️', query: 'node["amenity"="restaurant"]' },
+        cafe: { color: [155, 89, 182], icon: '☕', query: 'node["amenity"="cafe"]' },
+        bar: { color: [230, 126, 34], icon: '🍺', query: 'node["amenity"="bar"]' },
+        pharmacy: { color: [46, 204, 113], icon: '💊', query: 'node["amenity"="pharmacy"]' },
+        hospital: { color: [52, 152, 219], icon: '🏥', query: 'node["amenity"="hospital"]' },
+        bank: { color: [241, 196, 15], icon: '🏦', query: 'node["amenity"~"bank|atm"]' },
+        school: { color: [149, 165, 166], icon: '🏫', query: 'node["amenity"="school"]' },
+        parking: { color: [127, 140, 141], icon: '🅿️', query: 'node["amenity"="parking"]' }
+    };
+
+    // Handle amenity selection - MUST BE CALLED AFTER DOM IS READY
+    function setupAmenityListeners() {
+        document.querySelectorAll('.amenity-category').forEach(category => {
+            category.addEventListener('click', function() {
+                const amenity = this.dataset.amenity;
+                
+                // Toggle selection
+                if (selectedAmenities.has(amenity)) {
+                    selectedAmenities.delete(amenity);
+                    this.classList.remove('active');
+                } else {
+                    selectedAmenities.add(amenity);
+                    this.classList.add('active');
+                }
+            });
+        });
+    }
+
+    // Query Overpass API
+    async function queryOverpassAPI(bbox, amenityType) {
+        const config = amenityConfig[amenityType];
+        
+        // Convert Web Mercator coordinates to lat/lon
+        const minLon = (bbox.xmin * 180) / 20037508.34;
+        const maxLon = (bbox.xmax * 180) / 20037508.34;
+        const minLat = (Math.atan(Math.exp((bbox.ymin / 20037508.34) * Math.PI)) * 360 / Math.PI) - 90;
+        const maxLat = (Math.atan(Math.exp((bbox.ymax / 20037508.34) * Math.PI)) * 360 / Math.PI) - 90;
+        
+        const query = `
+            [out:json][timeout:25];
+            (
+                ${config.query}(${minLat},${minLon},${maxLat},${maxLon});
+            );
+            out body;
+            >;
+            out skel qt;
+        `;
+
+        const url = 'https://overpass-api.de/api/interpreter';
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: 'data=' + encodeURIComponent(query)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return convertOverpassToGeoJSON(data, amenityType);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // Convert Overpass response to GeoJSON
+    function convertOverpassToGeoJSON(overpassData, amenityType) {
+        const features = overpassData.elements
+            .filter(element => element.type === 'node' && element.lat && element.lon)
+            .map(element => ({
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [element.lon, element.lat]
+                },
+                properties: {
+                    id: element.id,
+                    name: element.tags?.name || 'Unnamed',
+                    amenity: amenityType,
+                    address: element.tags?.['addr:street'] || '',
+                    housenumber: element.tags?.['addr:housenumber'] || '',
+                    phone: element.tags?.phone || '',
+                    website: element.tags?.website || '',
+                    opening_hours: element.tags?.opening_hours || '',
+                    cuisine: element.tags?.cuisine || '',
+                    ...element.tags
+                }
+            }));
+
+        return {
+            type: 'FeatureCollection',
+            features: features
+        };
+    }
+
+    // Load layers
+    function loadLayers(apiKey) {
+        require([
+            "esri/config",
+            "esri/layers/GeoJSONLayer",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/renderers/SimpleRenderer"
+        ], function(
+            esriConfig,
+            GeoJSONLayer,
+            SimpleMarkerSymbol,
+            SimpleRenderer
+        ) {
+            esriConfig.apiKey = apiKey;
+
+            function waitForMapComponent() {
+                if (customElements.get('arcgis-map')) {
+                    const arcgisMap = document.querySelector("arcgis-map");
+                    if (arcgisMap) {
+                        arcgisMap.addEventListener("arcgisViewReadyChange", function(event) {
+                            if (!event.target.ready) return;
+
+                            const view = event.target.view;
+                            const searchBtn = document.getElementById('searchButton');
+                            
+                            searchBtn.addEventListener('click', async function() {
+                                if (selectedAmenities.size === 0) {
+                                    alert('Please select at least one amenity type!');
+                                    return;
+                                }
+
+                                const loadingOverlay = document.getElementById('loadingOverlay');
+                                loadingOverlay.classList.add('active');
+
+                                try {
+                                    const extent = view.extent;
+                                    const bbox = {
+                                        xmin: extent.xmin,
+                                        ymin: extent.ymin,
+                                        xmax: extent.xmax,
+                                        ymax: extent.ymax
+                                    };
+
+                                    // Remove existing layers
+                                    currentLayers.forEach((layer) => view.map.remove(layer));
+                                    currentLayers.clear();
+
+                                    // Query each selected amenity
+                                    let totalFeatures = 0;
+                                    for (const amenity of selectedAmenities) {
+                                        const geojson = await queryOverpassAPI(bbox, amenity);
+                                        totalFeatures += geojson.features.length;
+
+                                        const blob = new Blob([JSON.stringify(geojson)], {
+                                            type: "application/json"
+                                        });
+                                        const blobUrl = URL.createObjectURL(blob);
+
+                                        const config = amenityConfig[amenity];
+                                        const renderer = new SimpleRenderer({
+                                            symbol: new SimpleMarkerSymbol({
+                                                style: "circle",
+                                                color: config.color,
+                                                size: 12,
+                                                outline: {
+                                                    color: [255, 255, 255, 0.9],
+                                                    width: 2.5
+                                                }
+                                            })
+                                        });
+
+                                        const layer = new GeoJSONLayer({
+                                            url: blobUrl,
+                                            title: `OSM ${amenity}`,
+                                            renderer: renderer,
+                                            outFields: ["*"],
+                                            popupTemplate: {
+                                                title: "{name}",
+                                                content: function(feature) {
+                                                    const attrs = feature.graphic.attributes;
+                                                    let content = '<div style="max-width: 300px;">';
+                                                    content += `<p><strong>Type:</strong> ${attrs.amenity || 'N/A'}</p>`;
+                                                    
+                                                    if (attrs.address || attrs.housenumber) {
+                                                        content += `<p><strong>Address:</strong> ${attrs.housenumber || ''} ${attrs.address || ''}</p>`;
+                                                    }
+                                                    if (attrs.cuisine) {
+                                                        content += `<p><strong>Cuisine:</strong> ${attrs.cuisine}</p>`;
+                                                    }
+                                                    if (attrs.phone) {
+                                                        content += `<p><strong>Phone:</strong> ${attrs.phone}</p>`;
+                                                    }
+                                                    if (attrs.website) {
+                                                        content += `<p><strong>Website:</strong> <a href="${attrs.website}" target="_blank">${attrs.website}</a></p>`;
+                                                    }
+                                                    if (attrs.opening_hours) {
+                                                        content += `<p><strong>Hours:</strong> ${attrs.opening_hours}</p>`;
+                                                    }
+                                                    content += '<p style="margin-top: 10px; font-size: 0.85rem; color: #666;">';
+                                                    content += '<i class="fas fa-database"></i> Data from OpenStreetMap</p>';
+                                                    content += '</div>';
+                                                    return content;
+                                                }
+                                            }
+                                        });
+
+                                        view.map.add(layer);
+                                        await layer.when();
+                                        currentLayers.set(amenity, layer);
+
+                                        const categoryElement = document.querySelector(`[data-amenity="${amenity}"] .category-count`);
+                                        if (categoryElement) {
+                                            categoryElement.textContent = geojson.features.length;
+                                        }
+                                    }
+
+                                    document.getElementById('totalCount').textContent = totalFeatures;
+                                    const areaKm = ((extent.width / 1000) * (extent.height / 1000)).toFixed(1);
+                                    document.getElementById('areaSize').textContent = `${areaKm} km²`;
+
+                                } catch (error) {
+                                    alert('Failed to query OpenStreetMap. Please try again.');
+                                } finally {
+                                    loadingOverlay.classList.remove('active');
+                                }
+                            });
+                        });
+                    }
+                } else {
+                    setTimeout(waitForMapComponent, 100);
+                }
+            }
+            waitForMapComponent();
+        });
+    }
+
+    // Config loader
+    function loadConfig() {
+        const baseUrl = window.location.hostname === 'kdmonroe.github.io' || window.location.hostname === 'kylemonroe.dev'
+            ? '/arcgis-js-maps/shared/config.js'
+            : '../shared/config.js';
+
+        const configScript = document.createElement('script');
+        configScript.src = baseUrl;
+        configScript.onload = function() {
+            if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+                function waitForRequire() {
+                    if (typeof require !== 'undefined') {
+                        loadLayers(window.arcgisConfig.apiKey);
+                    } else {
+                        setTimeout(waitForRequire, 100);
+                    }
+                }
+                waitForRequire();
+            } else {
+                alert("API key not found. Please check your configuration.");
+            }
+        };
+
+        configScript.onerror = function() {
+            const altBaseUrl = window.location.pathname.includes('/arcgis-js-maps/')
+                ? '../shared/config.js'
+                : '/arcgis-js-maps/shared/config.js';
+
+            const fallbackScript = document.createElement('script');
+            fallbackScript.src = altBaseUrl;
+            fallbackScript.onload = function() {
+                if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+                    function waitForRequire() {
+                        if (typeof require !== 'undefined') {
+                            loadLayers(window.arcgisConfig.apiKey);
+                        } else {
+                            setTimeout(waitForRequire, 100);
+                        }
+                    }
+                    waitForRequire();
+                }
+            };
+            document.head.appendChild(fallbackScript);
+        };
+        document.head.appendChild(configScript);
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setupAmenityListeners();
+            loadConfig();
+        });
+    } else {
+        setupAmenityListeners();
+        loadConfig();
+    }
+    </script>
+</body>
+</html>
