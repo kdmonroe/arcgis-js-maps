@@ -15,7 +15,10 @@
     
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
+    <!-- Shared Mobile Responsive Styles -->
+    <link rel="stylesheet" href="../../shared/mobile-responsive.css">
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/styles.css">
     
@@ -112,7 +115,10 @@
         <div id="viewDiv" class="h-full w-full relative"></div>
 
         <!-- TimeSlider container (centered at bottom) -->
-        <div class="time-slider-container">
+        <div class="time-slider-container" id="timeSliderContainer">
+            <button id="timeSliderToggle" class="time-slider-toggle" aria-label="Toggle time slider" style="display: none;">
+                <i class="fas fa-chevron-up"></i>
+            </button>
             <div id="timeSlider"></div>
         </div>
 
@@ -131,5 +137,30 @@
 
     <!-- Application JavaScript (safe to defer) -->
     <script defer src="js/map.js"></script>
+
+    <!-- Mobile Time Slider Toggle -->
+    <script>
+    // Handle time slider toggle on small screens
+    document.addEventListener('DOMContentLoaded', function() {
+        const timeSliderToggle = document.getElementById('timeSliderToggle');
+        const timeSliderContainer = document.getElementById('timeSliderContainer');
+
+        if (timeSliderToggle) {
+            timeSliderToggle.addEventListener('click', function() {
+                timeSliderContainer.classList.toggle('expanded');
+
+                // Update icon direction
+                const icon = timeSliderToggle.querySelector('i');
+                if (timeSliderContainer.classList.contains('expanded')) {
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                } else {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                }
+            });
+        }
+    });
+    </script>
 </body>
 </html> 

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <title>Alternative Fuel Sources Map | ArcGIS JS Maps</title>
+
+    <!-- Stable script reference for ArcGIS SDK script injection -->
+    <script src="../shared/arcgis-script-reference.js"></script>
+
+    <!-- Calcite Components -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
+
+    <!-- ArcGIS Maps SDK for JavaScript -->
+    <!-- IMPORTANT: Do not add 'defer' attribute - it breaks AMD require() -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.32/"></script>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Shared Mobile Responsive Styles -->
+    <link rel="stylesheet" href="../shared/mobile-responsive.css">
+
+    <style>
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--calcite-sans-family);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #000000;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1001;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            opacity: 0.8;
+        }
+
+        .map-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+
+        #viewDiv {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../index.html" class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Demos
+        </a>
+        <h1>Alternative Fuel Sources Across the US</h1>
+        <div></div>
+    </div>
+
+    <div class="map-container">
+        <div id="viewDiv"></div>
+    </div>
+
+    <script>
+    // Initialize the map when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        require([
+            "esri/config",
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/widgets/LayerList",
+            "esri/widgets/Legend",
+            "esri/widgets/Home",
+            "esri/widgets/Expand"
+        ], function(esriConfig, WebMap, MapView, LayerList, Legend, Home, Expand) {
+            // Dynamically determine the base URL for config.js
+            const baseUrl = window.location.hostname === 'kdmonroe.github.io'
+                ? '/arcgis-js-maps/shared/config.js'
+                : '../shared/config.js';
+
+            // Create and load the script element dynamically
+            const configScript = document.createElement('script');
+            configScript.src = baseUrl;
+
+            configScript.onerror = function() {
+                console.error('Failed to load config.js from:', baseUrl);
+                alert('Configuration file not found. Please ensure shared/config.js exists.\n\nFor local development:\n1. Copy shared/config.template.js to shared/config.js\n2. Add your API key to shared/config.js');
+            };
+
+            configScript.onload = function() {
+                // Set API key from shared config
+                if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+                    esriConfig.apiKey = window.arcgisConfig.apiKey;
+                } else {
+                    console.error('API key not found in config.js');
+                    alert('API key not configured. Please check shared/config.js');
+                    return;
+                }
+
+                // Load the web map from ArcGIS Online (uses default www.arcgis.com portal)
+                const webmap = new WebMap({
+                    portalItem: {
+                        id: "03251b7e309148fda2176d828c63ca26"
+                    }
+                });
+
+                // Create the MapView
+                const view = new MapView({
+                    container: "viewDiv",
+                    map: webmap,
+                    // Let the web map define the initial extent
+                    // Or fall back to default values if needed
+                    popup: {
+                        dockEnabled: true,
+                        dockOptions: {
+                            position: "top-right",
+                            breakpoint: false
+                        }
+                    }
+                });
+
+                // Wait for the view to be ready
+                view.when(function() {
+                    // Add Home widget to the view
+                    const homeWidget = new Home({
+                        view: view
+                    });
+                    view.ui.add(homeWidget, "top-left");
+
+                    // Create LayerList widget with discrete controls
+                    const layerList = new LayerList({
+                        view: view,
+                        visibleElements: {
+                            statusIndicators: true,
+                            heading: true
+                        },
+                        listItemCreatedFunction: function(event) {
+                            const item = event.item;
+                            // Add panel with legend for each layer
+                            if (item.layer.type !== "group") {
+                                item.panel = {
+                                    content: "legend",
+                                    open: false
+                                };
+                            }
+                        }
+                    });
+
+                    // Wrap LayerList in Expand widget for discrete control
+                    const layerListExpand = new Expand({
+                        view: view,
+                        content: layerList,
+                        expandIconClass: "esri-icon-layer-list",
+                        expandTooltip: "Layer List",
+                        group: "top-left",
+                        expanded: false // Start collapsed
+                    });
+
+                    // Add LayerList to UI (positioned under home button)
+                    view.ui.add(layerListExpand, {
+                        position: "top-left",
+                        index: 1
+                    });
+
+                    // Create Legend widget
+                    const legend = new Legend({
+                        view: view,
+                        style: "card",  // Modern card style
+                        respectLayerVisibility: true,  // Only show legend for visible layers
+                        basemapLegendVisible: false    // Exclude basemap from legend
+                    });
+
+                    // Wrap Legend in Expand widget for discrete control
+                    const legendExpand = new Expand({
+                        view: view,
+                        content: legend,
+                        expandIconClass: "esri-icon-legend",
+                        expandTooltip: "Legend",
+                        group: "top-left",
+                        expanded: true  // Start expanded
+                    });
+
+                    // Add Legend to UI (positioned under layer list)
+                    view.ui.add(legendExpand, {
+                        position: "top-left",
+                        index: 2
+                    });
+
+                }).catch(function(error) {
+                    console.error('Error loading map view:', error);
+                    console.error('Error details:', error.details);
+
+                    let errorMessage = 'Error loading map: ' + error.message;
+                    if (error.details && error.details.httpStatus === 404) {
+                        errorMessage += '\n\nThe web map could not be found. This might be due to:\n';
+                        errorMessage += '- The web map being private\n';
+                        errorMessage += '- The portal URL being incorrect\n';
+                        errorMessage += '- The item ID being incorrect';
+                    }
+                    alert(errorMessage);
+                });
+            };
+
+            document.head.appendChild(configScript);
+        });
+    });
+    </script>
+</body>
+</html>
