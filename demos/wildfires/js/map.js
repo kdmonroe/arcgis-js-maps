@@ -3,33 +3,30 @@
 // Initialize the map when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     require([
-        "esri/config",
         "esri/Map",
         "esri/views/MapView",
-        "esri/widgets/BasemapToggle",
         "esri/widgets/Home",
         "esri/widgets/LayerList",
+        "esri/widgets/Legend",
         "esri/widgets/Expand",
+        "esri/widgets/TimeSlider",
         "esri/layers/FeatureLayer",
         "esri/renderers/SimpleRenderer",
-        "esri/symbols/SimpleFillSymbol",
         "esri/symbols/SimpleMarkerSymbol",
-        "esri/Color",
         "esri/support/actions/ActionButton",
-        "esri/support/actions/ActionToggle",
-        "esri/core/Collection",
-        "esri/widgets/Print"
+        "esri/core/reactiveUtils"
     ], function(
-        esriConfig, Map, MapView, BasemapToggle, Home, LayerList, Expand,
-        FeatureLayer, SimpleRenderer, SimpleFillSymbol, SimpleMarkerSymbol, Color,
-        ActionButton, ActionToggle, Collection, Print
+        Map, MapView, Home, LayerList, Legend, Expand, TimeSlider,
+        FeatureLayer, SimpleRenderer, SimpleMarkerSymbol,
+        ActionButton, reactiveUtils
     ) {
-        // Set ArcGIS API key if needed
-        // esriConfig.apiKey = "YOUR_API_KEY";
+        // Global reference to TimeSlider for synchronization with quick filters
+        let timeSlider = null;
         
-        // Create map instance
+        // Create map instance with dark cartography
+        // Using dark-gray-vector as primary basemap (Firefly portal item may require authentication)
         const map = new Map({
-            basemap: "hybrid"
+            basemap: "dark-gray-vector"
         });
         
         // Create view instance
@@ -62,65 +59,85 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Create incident point layer (wildfire points)
         const incidentLayer = createIncidentLayer();
-        
-        // Create perimeter polygon layer (wildfire perimeters)
-        const perimeterLayer = createPerimeterLayer();
-        
-        // Add layers to map
-        map.add(perimeterLayer);
+
+        // Add layer to map
         map.add(incidentLayer);
-        
+
         // Add UI widgets
-        addMapWidgets(view, incidentLayer, perimeterLayer);
+        addMapWidgets(view, incidentLayer);
         
         // Initialize the view
         view.when(() => {
         });
         
-        // Helper function to create incident layer
+        // Helper function to create incident layer with fire point symbols
         function createIncidentLayer() {
-            return new FeatureLayer({
+            // Create Firefly-style fire symbol with size-based rendering
+            // Symbol size scales with fire acreage for visual prominence
+            const fireSymbol = new SimpleMarkerSymbol({
+                color: "#FF6B00",  // Bright orange for fire incidents
+                size: 4,           // Base size - will be overridden by visual variables
+                outline: null      // No outline for cleaner bloom glow
+            });
+
+            const incidentLayer = new FeatureLayer({
                 url: "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/USA_Wildfires_v1/FeatureServer/0",
                 outFields: ["*"],
                 title: "Wildfire Incidents",
                 listMode: "show",
-                opacity: 0.8,
-                renderer: new SimpleRenderer({
-                    symbol: new SimpleMarkerSymbol({
-                        style: "circle",
-                        color: new Color([255, 0, 0, 0.8]), // Red with 80% opacity
-                        size: 8,
-                        outline: {
-                            color: new Color([255, 255, 255, 0.8]),
-                            width: 1
+                opacity: 1.0,
+                // Configure temporal information for time-based filtering
+                timeInfo: {
+                    startField: "FireDiscoveryDateTime",
+                    interval: {
+                        unit: "days",
+                        value: 1
+                    }
+                },
+                // Add popup template for interactive feature details
+                popupTemplate: {
+                    title: "{IncidentName}",
+                    content: [
+                        {
+                            type: "fields",
+                            fieldInfos: [
+                                { fieldName: "IncidentName", label: "Incident Name" },
+                                { fieldName: "FireDiscoveryDateTime", label: "Discovered", format: { dateFormat: "short-date-short-time" } },
+                                { fieldName: "DailyAcres", label: "Acres Burned" },
+                                { fieldName: "PercentContained", label: "% Contained" },
+                                { fieldName: "UniqueFireIdentifier", label: "Fire ID" }
+                            ]
                         }
-                    })
+                    ]
+                },
+                renderer: new SimpleRenderer({
+                    symbol: fireSymbol,
+                    // Add visual variables for size-based rendering by acreage
+                    visualVariables: [{
+                        type: "size",
+                        field: "DailyAcres",  // Size based on fire acreage
+                        stops: [
+                            { value: 100, size: 2 },      // Small fires: 2px
+                            { value: 1000, size: 4 },     // Medium fires: 4px
+                            { value: 10000, size: 8 },    // Large fires: 8px
+                            { value: 50000, size: 12 }    // Very large fires: 12px
+                        ]
+                    }]
                 })
             });
-        }
-        
-        // Helper function to create perimeter layer
-        function createPerimeterLayer() {
-            return new FeatureLayer({
-                url: "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/USA_Wildfires_v1/FeatureServer/1",
-                outFields: ["*"],
-                title: "Wildfire Perimeters",
-                listMode: "show",
-                opacity: 0.5,
-                renderer: new SimpleRenderer({
-                    symbol: new SimpleFillSymbol({
-                        color: new Color([255, 140, 0, 0.5]), // Orange with 50% opacity
-                        outline: {
-                            color: new Color([255, 0, 0, 0.8]),
-                            width: 1
-                        }
-                    })
-                })
-            });
+
+            // Add Firefly bloom effect for glowing appearance
+            // Parameters: bloom(strength, radius, threshold)
+            // - strength: 1.5 (moderate glow intensity)
+            // - radius: 0.5px (soft blur)
+            // - threshold: 10% (glow on bright colors only)
+            incidentLayer.effect = "bloom(1.5, 0.5px, 10%)";
+
+            return incidentLayer;
         }
         
         // Add widgets to the map
-        function addMapWidgets(view, incidentLayer, perimeterLayer) {
+        function addMapWidgets(view, incidentLayer) {
             // Add a home button
             const homeWidget = new Home({
                 view: view
@@ -146,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 expandIconClass: "esri-icon-layer-list",
                 expandTooltip: "Layer List",
                 group: "top-left",
-                expanded: true // Start expanded to show the controls
+                expanded: false // Start collapsed
             });
             
             // Add LayerList to UI (position it under the home button)
@@ -155,21 +172,263 @@ document.addEventListener('DOMContentLoaded', function() {
                 index: 1
             });
             
-            // Add basemap toggle
-            const basemapToggle = new BasemapToggle({
+            // Add TimeSlider widget for temporal navigation
+            addTimeSlider(view, incidentLayer);
+
+            // Add incident count display with dynamic updates
+            addIncidentCount(view, incidentLayer);
+
+            // Add date filter buttons for quick filtering
+            addDateFilterButtons(incidentLayer);
+
+            // Create Legend widget
+            const legend = new Legend({
                 view: view,
-                nextBasemap: "streets-vector"
+                style: "card",  // Modern card style
+                respectLayerVisibility: true,  // Only show legend for visible layers
+                basemapLegendVisible: false    // Exclude basemap from legend
             });
-            view.ui.add(basemapToggle, "bottom-right");
-            
+
+            // Wrap Legend in Expand widget for collapsibility
+            const legendExpand = new Expand({
+                view: view,
+                content: legend,
+                expandIconClass: "esri-icon-legend",
+                expandTooltip: "Legend",
+                expanded: true  // Start expanded
+            });
+
+            // Add Legend to UI in top-left corner, under home button
+            view.ui.add(legendExpand, {
+                position: "top-left",
+                index: 1  // Position below home button (index 0)
+            });
+
             // Setup event handler for layer actions
             setupLayerActionsHandler(layerList, view);
+        }
+
+        // Add TimeSlider widget for temporal filtering
+        function addTimeSlider(view, incidentLayer) {
+            // Create TimeSlider widget after incident layer is loaded
+            incidentLayer.when(() => {
+                timeSlider = new TimeSlider({
+                    container: "timeSlider",  // Use custom HTML container for centered positioning
+                    view: view,
+                    mode: "time-window",
+                    fullTimeExtent: incidentLayer.timeInfo.fullTimeExtent,
+                    stops: {
+                        interval: {
+                            value: 1,
+                            unit: "days"
+                        }
+                    },
+                    playRate: 1500,
+                    loop: false
+                });
+                // Note: No view.ui.add() needed - container is in HTML
+            });
+        }
+
+        // Add incident count display with dynamic updates
+        function addIncidentCount(view, incidentLayer) {
+            const countContainer = document.createElement("div");
+            countContainer.className = "incident-count";
+            countContainer.id = "incident-count";
+            countContainer.innerHTML = '<span class="count-label">Showing:</span> <span class="count-number" id="count-number">Loading...</span>';
+
+            const header = document.querySelector(".header");
+            if (header) {
+                header.appendChild(countContainer);
+            }
+
+            // Variables for debouncing
+            let updateTimeout = null;
+            let isUpdating = false;
+
+            // Function to update count based on current filters and view
+            function updateIncidentCount() {
+                if (isUpdating) return;
+                
+                isUpdating = true;
+                
+                // Query features that are currently visible based on all active filters
+                const query = incidentLayer.createQuery();
+                query.where = incidentLayer.definitionExpression || "1=1";
+                
+                // Apply time extent if set
+                if (view.timeExtent) {
+                    query.timeExtent = view.timeExtent;
+                }
+                
+                incidentLayer.queryFeatureCount(query).then(count => {
+                    const countElement = document.getElementById("count-number");
+                    if (countElement) {
+                        countElement.textContent = `${count} incident${count !== 1 ? 's' : ''}`;
+                    }
+                    isUpdating = false;
+                }).catch(error => {
+                    console.error("Error querying feature count:", error);
+                    isUpdating = false;
+                });
+            }
+
+            // Debounced update function
+            function debouncedUpdate() {
+                if (updateTimeout) {
+                    clearTimeout(updateTimeout);
+                }
+                updateTimeout = setTimeout(updateIncidentCount, 300);
+            }
+
+            // Make update function available globally for manual calls
+            window.updateIncidentCount = debouncedUpdate;
+
+            // Set up reactive watchers after layer view is available
+            view.whenLayerView(incidentLayer).then(layerView => {
+                // Watch for changes that affect the count
+                reactiveUtils.watch(
+                    () => [view.timeExtent, layerView.updating, view.stationary, incidentLayer.definitionExpression],
+                    ([timeExtent, layerViewUpdating, stationary, defExpression]) => {
+                        // Update when layer view is done updating and view is stationary
+                        if (!layerViewUpdating && stationary) {
+                            debouncedUpdate();
+                        }
+                    }
+                );
+
+                // Initial count update
+                updateIncidentCount();
+            });
+        }
+
+        // Add date filter buttons for quick filtering
+        function addDateFilterButtons(incidentLayer) {
+            // Track whether quick filter is enabled
+            let quickFilterEnabled = false;
+
+            // Apply "All Time" filter by default when layer loads
+            incidentLayer.when(() => {
+                incidentLayer.definitionExpression = null; // Clear any filters to show all data
+            });
+
+            // Create filter button container
+            const filterContainer = document.createElement("div");
+            filterContainer.className = "date-filter-buttons";
+
+            const filterLabel = document.createElement("div");
+            filterLabel.className = "filter-label";
+            filterLabel.textContent = "Quick Filter:";
+            filterContainer.appendChild(filterLabel);
+
+            // Define filter options
+            const filters = [
+                { label: "Current Incidents", type: "current", id: "filter-current" },
+                { label: "Last 24 Hours", type: "hours", hours: 24, id: "filter-24h" },
+                { label: "Last 7 Days", type: "hours", hours: 168, id: "filter-7d" },
+                { label: "Last 30 Days", type: "hours", hours: 720, id: "filter-30d" },
+                { label: "All Time", type: "all", hours: null, id: "filter-all" }
+            ];
+
+            // Create filter buttons (initially appear disabled but are clickable)
+            filters.forEach((filterOption, index) => {
+                const button = document.createElement("calcite-button");
+                button.id = filterOption.id;
+                button.textContent = filterOption.label;
+                button.appearance = "outline";
+                button.scale = "s";
+
+                button.addEventListener("click", () => {
+                    // Check if this button is already active
+                    const wasActive = button.appearance === "solid";
+                    
+                    // If clicking the active button, disable the feature
+                    if (wasActive) {
+                        quickFilterEnabled = false;
+                        button.appearance = "outline";
+                        
+                        // Clear definition expression
+                        incidentLayer.definitionExpression = null;
+                        
+                        // Reset time slider to full extent
+                        if (timeSlider && timeSlider.fullTimeExtent) {
+                            view.timeExtent = timeSlider.fullTimeExtent;
+                        }
+
+                        // Update incident count
+                        if (window.updateIncidentCount) {
+                            window.updateIncidentCount();
+                        }
+                        return;
+                    }
+
+                    // Enable the feature and activate this button
+                    quickFilterEnabled = true;
+                    
+                    // Update all buttons
+                    document.querySelectorAll(".date-filter-buttons calcite-button").forEach(btn => {
+                        btn.appearance = "outline";
+                    });
+                    button.appearance = "solid";
+
+                    // Apply filter based on type
+                    if (filterOption.type === "current") {
+                        // Show only current incidents (not fully contained)
+                        incidentLayer.definitionExpression = "PercentContained < 100";
+                        // Reset time filter to show all time for current incidents
+                        if (timeSlider && timeSlider.fullTimeExtent) {
+                            view.timeExtent = timeSlider.fullTimeExtent;
+                        }
+                    } else if (filterOption.type === "all") {
+                        // Show all features - clear definition expression
+                        incidentLayer.definitionExpression = null;
+                        // Reset time slider to full extent
+                        if (timeSlider && timeSlider.fullTimeExtent) {
+                            view.timeExtent = timeSlider.fullTimeExtent;
+                        }
+                    } else if (filterOption.type === "hours") {
+                        // Clear any definition expression for time-based filtering
+                        incidentLayer.definitionExpression = null;
+                        
+                        // Calculate time extent for time-based filter
+                        const now = new Date();
+                        const cutoffDate = new Date(now.getTime() - (filterOption.hours * 60 * 60 * 1000));
+                        
+                        // Update the view's timeExtent to filter the layer
+                        if (timeSlider && timeSlider.fullTimeExtent) {
+                            const timeExtent = {
+                                start: cutoffDate,
+                                end: timeSlider.fullTimeExtent.end
+                            };
+                            view.timeExtent = timeExtent;
+                            
+                            // Also update the TimeSlider's values to reflect the filter
+                            timeSlider.timeExtent = timeExtent;
+                        }
+                    }
+
+                    // Update incident count after filter is applied
+                    if (window.updateIncidentCount) {
+                        window.updateIncidentCount();
+                    }
+                });
+
+                filterContainer.appendChild(button);
+            });
+
+            // Add filter container to the header
+            const header = document.querySelector(".header");
+            if (header) {
+                header.appendChild(filterContainer);
+            } else {
+                document.body.appendChild(filterContainer);
+            }
         }
         
         // Create actions for each layer list item
         function createLayerListActions(event) {
             const item = event.item;
-            
+
             // Create action sections (2D array of actions)
             item.actionsSections = [
                 // First section - Data and navigation actions
@@ -191,52 +450,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                 ]
             ];
-            
-            // Add a transparency slider to each layer's panel
-            createTransparencySlider(item);
-        }
-        
-        // Add transparency slider to layer panel
-        function createTransparencySlider(item) {
-            // Create container elements
-            const container = document.createElement("div");
-            container.className = "layer-transparency-control";
-            
-            const label = document.createElement("div");
-            label.className = "layer-slider-label";
-            label.textContent = "Layer Transparency";
-            
-            // Create Calcite slider
-            const sliderContainer = document.createElement("div");
-            sliderContainer.className = "layer-slider-container";
-            
-            const slider = document.createElement("calcite-slider");
-            slider.min = 0;
-            slider.max = 1;
-            slider.step = 0.1;
-            slider.value = 1 - item.layer.opacity; // Convert opacity to transparency
-            slider.labelHandles = true;
-            slider.labelTicks = true;
-            slider.ticks = 0.5;
-            slider.minLabel = "0%";
-            slider.maxLabel = "100%";
-            
-            slider.addEventListener("calciteSliderInput", (event) => {
-                // Update layer opacity (invert transparency value)
-                item.layer.opacity = 1 - event.target.value;
-            });
-            
-            // Assemble the panel
-            sliderContainer.appendChild(slider);
-            container.appendChild(label);
-            container.appendChild(sliderContainer);
-            
-            // Add the panel content
-            item.panel = {
-                title: "Layer Transparency",
-                content: container,
-                className: "esri-icon-sliders-horizontal"
-            };
         }
         
         // Handle actions triggered from the layer list
