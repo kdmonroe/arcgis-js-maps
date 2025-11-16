@@ -23,6 +23,9 @@
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Shared Mobile Responsive Styles -->
+    <link rel="stylesheet" href="../shared/mobile-responsive.css">
+    
     <style>
         :root {
             --primary-color: #0078CA;
@@ -290,23 +293,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .control-panel {
-                max-width: calc(100% - 30px);
-                max-height: 50vh;
-            }
-
-            .stats-panel {
-                flex-direction: column;
-                gap: 10px;
-                padding: 10px 15px;
-            }
-
-            .header h1 {
-                font-size: 1.1rem;
-            }
-        }
     </style>
 </head>
 <body>
@@ -321,10 +307,24 @@
     <div class="map-container">
         <arcgis-map basemap="streets-navigation-vector" center="-77.0369, 38.9072" zoom="14">
             <arcgis-zoom position="top-right"></arcgis-zoom>
+            <arcgis-search position="top-right"></arcgis-search>
+            <arcgis-locate position="top-right"></arcgis-locate>
         </arcgis-map>
         
+        <!-- Mobile Panel Toggle Button -->
+        <button class="panel-toggle-button" id="panelToggle" aria-label="Toggle control panel">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <!-- Panel Backdrop for Mobile -->
+        <div class="panel-backdrop" id="panelBackdrop"></div>
+        
         <!-- Control Panel -->
-        <div class="control-panel">
+        <!-- Control Panel -->
+        <div class="control-panel" id="controlPanel">
+            <button class="panel-close-button" id="panelClose" aria-label="Close panel">
+                <i class="fas fa-times"></i>
+            </button>
             <h3><i class="fas fa-filter"></i> Select Amenity Type</h3>
             
             <button class="search-button" id="searchButton" style="margin-top: 0; margin-bottom: 15px;">
@@ -426,6 +426,36 @@
     <script>
     let selectedAmenities = new Set();
     let currentLayers = new Map();
+
+    // Mobile panel toggle functionality
+    function setupMobilePanelToggle() {
+        const panelToggle = document.getElementById('panelToggle');
+        const panelClose = document.getElementById('panelClose');
+        const controlPanel = document.getElementById('controlPanel');
+        const panelBackdrop = document.getElementById('panelBackdrop');
+        
+        function openPanel() {
+            controlPanel.classList.add('active');
+            panelBackdrop.classList.add('active');
+        }
+        
+        function closePanel() {
+            controlPanel.classList.remove('active');
+            panelBackdrop.classList.remove('active');
+        }
+        
+        if (panelToggle) {
+            panelToggle.addEventListener('click', openPanel);
+        }
+        
+        if (panelClose) {
+            panelClose.addEventListener('click', closePanel);
+        }
+        
+        if (panelBackdrop) {
+            panelBackdrop.addEventListener('click', closePanel);
+        }
+    }
 
     // Amenity configurations
     const amenityConfig = {
@@ -711,10 +741,12 @@
     
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
+            setupMobilePanelToggle();
             setupAmenityListeners();
             loadConfig();
         });
     } else {
+        setupMobilePanelToggle();
         setupAmenityListeners();
         loadConfig();
     }
