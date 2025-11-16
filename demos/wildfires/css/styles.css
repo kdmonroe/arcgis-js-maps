@@ -348,6 +348,28 @@ body.calcite-mode-dark .esri-expand__container {
     z-index: 1000;
     min-width: 60%;
     max-width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Time slider toggle button for mobile */
+.time-slider-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: all 0.3s ease;
+    margin-top: -8px;
+    align-self: center;
+}
+
+.time-slider-toggle:hover {
+    transform: scale(1.2);
 }
 
 body.calcite-mode-dark .time-slider-container {
@@ -433,4 +455,259 @@ body.calcite-mode-dark .filter-label {
 
 .date-filter-buttons calcite-button[appearance="outline"]:hover {
     opacity: 1;
+}
+
+/* ============================================
+   MOBILE RESPONSIVENESS FOR WILDFIRES MAP
+   ============================================ */
+
+/* Tablet and large phones (768px and below) */
+@media (max-width: 768px) {
+    /* Header adjustments */
+    .header {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .header h1 {
+        font-size: 1.1rem;
+        flex: 1;
+        text-align: center;
+    }
+
+    /* Time slider responsive adjustments */
+    .time-slider-container {
+        position: absolute;
+        bottom: 10px;
+        left: 15px;
+        right: 15px;
+        transform: none;
+        min-width: auto;
+        max-width: none;
+        width: calc(100% - 30px);
+        padding: 12px 15px;
+        background: rgba(42, 42, 42, 0.98);
+    }
+
+    /* Compact time slider controls */
+    #timeSlider {
+        font-size: 0.9rem;
+    }
+
+    .esri-time-slider {
+        font-size: 0.85rem !important;
+    }
+
+    .esri-time-slider__animation {
+        padding: 8px !important;
+    }
+
+    .esri-time-slider__time-extent {
+        font-size: 0.8rem !important;
+    }
+
+    /* Filter buttons responsive */
+    .date-filter-buttons {
+        gap: 4px;
+        padding: 0 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-label {
+        font-size: 11px;
+    }
+
+    .date-filter-buttons calcite-button {
+        --calcite-font-size--1: 0.75rem;
+        padding: 8px !important;
+    }
+
+    /* Incident count responsive */
+    .incident-count {
+        padding: 0 0.5rem;
+        font-size: 12px;
+        gap: 4px;
+    }
+
+    .count-number {
+        font-size: 13px;
+    }
+
+    /* Data table responsive */
+    .data-table-container {
+        max-height: 45vh;
+        bottom: calc(var(--panel-mobile-height) + 80px);
+        left: 10px;
+        right: 10px;
+    }
+
+    .data-table-header {
+        padding: 10px 12px;
+    }
+
+    .data-table-header h3 {
+        font-size: 14px;
+    }
+
+    .data-table-content {
+        max-height: 40vh;
+    }
+
+    .feature-data-table {
+        font-size: 12px;
+    }
+
+    .feature-data-table th {
+        padding: 8px 6px;
+    }
+
+    .feature-data-table td {
+        padding: 6px;
+        max-width: 150px;
+    }
+
+    /* Layer info panel responsive */
+    .layer-info-panel {
+        width: calc(100vw - 40px);
+        max-width: 100%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .layer-info-header {
+        padding: 10px 12px;
+    }
+
+    .layer-info-header h3 {
+        font-size: 14px;
+    }
+
+    .layer-info-content {
+        padding: 12px;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .layer-info-content p {
+        font-size: 13px;
+    }
+}
+
+/* Small phones (480px and below) */
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 1rem;
+    }
+
+    .back-button i {
+        margin-right: 0 !important;
+    }
+
+    .back-button span {
+        display: none;
+    }
+
+    /* Hide filter label on very small screens */
+    .filter-label {
+        display: none;
+    }
+
+    /* Stack filter buttons more tightly */
+    .date-filter-buttons {
+        gap: 2px;
+        padding: 0 0.25rem;
+    }
+
+    .date-filter-buttons calcite-button {
+        padding: 6px !important;
+        min-width: auto;
+    }
+
+    /* Incident count more compact */
+    .incident-count {
+        padding: 0 0.25rem;
+        font-size: 11px;
+    }
+
+    .count-label {
+        display: none;
+    }
+
+    /* Time slider on small phones - show toggle button */
+    .time-slider-toggle {
+        display: block !important;
+    }
+
+    /* Collapse time slider content by default on very small screens */
+    #timeSlider {
+        display: none;
+        max-height: 0;
+        overflow: hidden;
+    }
+
+    /* Show time slider when expanded */
+    .time-slider-container.expanded #timeSlider {
+        display: block;
+        max-height: 100%;
+    }
+
+    /* Time slider bottom margin adjustment for iOS */
+    .time-slider-container {
+        bottom: 8px;
+        left: 10px;
+        right: 10px;
+        width: calc(100% - 20px);
+        padding: 10px 12px;
+        padding-top: 8px;
+    }
+
+    .data-table-container {
+        left: 8px;
+        right: 8px;
+        max-height: 40vh;
+    }
+
+    .layer-info-panel {
+        width: calc(100vw - 20px);
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+    .time-slider-container {
+        bottom: 8px;
+        padding: 8px 12px;
+        max-height: 35vh;
+    }
+
+    .esri-time-slider {
+        font-size: 0.75rem !important;
+    }
+
+    .esri-time-slider__animation {
+        padding: 4px !important;
+    }
+
+    /* Adjust controls for landscape */
+    .date-filter-buttons {
+        gap: 2px;
+        padding: 0 0.25rem;
+    }
+
+    .filter-label {
+        display: none;
+    }
+
+    .incident-count {
+        padding: 0 0.25rem;
+        font-size: 11px;
+    }
+
+    .count-label {
+        display: none;
+    }
+
+    .count-number {
+        font-size: 12px;
+    }
 }

@@ -172,11 +172,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 index: 1
             });
             
+            // Add incident count display with dynamic updates (must be before TimeSlider to register updateIncidentCount function)
+            addIncidentCount(view, incidentLayer);
+
             // Add TimeSlider widget for temporal navigation
             addTimeSlider(view, incidentLayer);
-
-            // Add incident count display with dynamic updates
-            addIncidentCount(view, incidentLayer);
 
             // Add date filter buttons for quick filtering
             addDateFilterButtons(incidentLayer);
@@ -212,11 +212,23 @@ document.addEventListener('DOMContentLoaded', function() {
         function addTimeSlider(view, incidentLayer) {
             // Create TimeSlider widget after incident layer is loaded
             incidentLayer.when(() => {
+                const fullExtent = incidentLayer.timeInfo.fullTimeExtent;
+                
+                // Set initial time window to show last 30 days
+                const endDate = fullExtent.end;
+                const startDate = new Date(endDate.getTime() - (30 * 24 * 60 * 60 * 1000)); // 30 days ago
+                
+                const initialTimeExtent = {
+                    start: startDate > fullExtent.start ? startDate : fullExtent.start,
+                    end: endDate
+                };
+                
                 timeSlider = new TimeSlider({
                     container: "timeSlider",  // Use custom HTML container for centered positioning
                     view: view,
                     mode: "time-window",
-                    fullTimeExtent: incidentLayer.timeInfo.fullTimeExtent,
+                    fullTimeExtent: fullExtent,
+                    timeExtent: initialTimeExtent,
                     stops: {
                         interval: {
                             value: 1,
@@ -226,6 +238,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     playRate: 1500,
                     loop: false
                 });
+                
+                // Apply the initial time extent to the view to filter the layer
+                view.timeExtent = initialTimeExtent;
+                
                 // Note: No view.ui.add() needed - container is in HTML
             });
         }
@@ -284,21 +300,30 @@ document.addEventListener('DOMContentLoaded', function() {
             // Make update function available globally for manual calls
             window.updateIncidentCount = debouncedUpdate;
 
-            // Set up reactive watchers after layer view is available
-            view.whenLayerView(incidentLayer).then(layerView => {
-                // Watch for changes that affect the count
-                reactiveUtils.watch(
-                    () => [view.timeExtent, layerView.updating, view.stationary, incidentLayer.definitionExpression],
-                    ([timeExtent, layerViewUpdating, stationary, defExpression]) => {
-                        // Update when layer view is done updating and view is stationary
-                        if (!layerViewUpdating && stationary) {
-                            debouncedUpdate();
-                        }
+            // Watch for timeExtent changes directly (simpler, more reliable)
+            reactiveUtils.watch(
+                () => view.timeExtent,
+                (newTimeExtent) => {
+                    if (newTimeExtent) {
+                        debouncedUpdate();
                     }
-                );
+                }
+            );
 
-                // Initial count update
-                updateIncidentCount();
+            // Also watch for definitionExpression changes
+            reactiveUtils.watch(
+                () => incidentLayer.definitionExpression,
+                () => {
+                    debouncedUpdate();
+                }
+            );
+
+            // Set up initial count update after layer view is available
+            view.whenLayerView(incidentLayer).then(() => {
+                // Give it a moment for everything to settle, then update
+                setTimeout(() => {
+                    updateIncidentCount();
+                }, 500);
             });
         }
 
