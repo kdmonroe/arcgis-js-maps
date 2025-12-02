@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <title>Assault Weapons Ban Timeline | ArcGIS JS Maps</title>
+    
+    <!-- Stable script reference for ArcGIS SDK script injection -->
+    <script src="../shared/arcgis-script-reference.js"></script>
+    
+    <!-- Calcite Components -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
+    
+    <!-- ArcGIS Maps SDK for JavaScript (NO DEFER - require must be available) -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.32/"></script>
+    
+    <!-- Load Map components from CDN with defer -->
+    <script defer type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
+    
+    <!-- Font Awesome for additional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Shared Mobile Responsive Styles -->
+    <link rel="stylesheet" href="../shared/mobile-responsive.css">
+
+    <style>
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+            --weapon-banned: #c62828;
+            --weapon-regulated: #ff8f00;
+            --weapon-unrestricted: #2e7d32;
+            --federal-ban: #5c6bc0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--calcite-sans-family);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.25rem;
+            margin: 0;
+        }
+        
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+        }
+        
+        .header-status .current-date {
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+        
+        .header-status .stats {
+            opacity: 0.9;
+        }
+        
+        .header-status .federal-status {
+            background: var(--federal-ban);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            opacity: 0.8;
+        }
+        
+        .map-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+        
+        arcgis-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .legend-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            width: 180px;
+            max-width: 180px;
+        }
+        
+        .legend-panel calcite-panel {
+            --calcite-panel-width: 180px;
+            --calcite-panel-header-background-color: rgba(50, 50, 50, 0.9);
+            --calcite-panel-header-text-color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .legend-content {
+            padding: 8px 10px;
+            background: white;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            font-size: 0.75rem;
+            line-height: 1.3;
+        }
+        
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            margin-right: 8px;
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .time-slider-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 400px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .time-slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .time-slider-header:hover {
+            background: var(--primary-hover);
+        }
+        
+        .time-slider-header span {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .time-slider-toggle {
+            font-size: 0.75rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .time-slider-content {
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .time-slider-container.collapsed .time-slider-content {
+            display: none;
+        }
+        
+        .time-slider-container.collapsed .time-slider-toggle {
+            transform: rotate(180deg);
+        }
+        
+        .time-slider-container.collapsed {
+            min-width: auto;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.5rem 0.75rem;
+            }
+            
+            .header h1 {
+                font-size: 1rem;
+            }
+            
+            .header-status {
+                gap: 0.5rem;
+                font-size: 0.7rem;
+                flex-wrap: wrap;
+            }
+            
+            .header-status .current-date {
+                padding: 0.2rem 0.4rem;
+                font-size: 0.7rem;
+            }
+            
+            .header-status .stats {
+                font-size: 0.65rem;
+            }
+            
+            .header-status .federal-status {
+                padding: 0.2rem 0.4rem;
+                font-size: 0.65rem;
+            }
+            
+            .legend-panel {
+                top: 5px;
+                left: 5px;
+                width: 160px;
+                max-width: 160px;
+            }
+            
+            .legend-panel calcite-panel {
+                --calcite-panel-width: 160px;
+            }
+            
+            .legend-content {
+                padding: 6px 8px;
+            }
+            
+            .legend-item {
+                margin-bottom: 3px;
+                font-size: 0.65rem;
+                line-height: 1.2;
+            }
+            
+            .legend-color {
+                width: 12px;
+                height: 12px;
+                margin-right: 6px;
+            }
+            
+            .time-slider-container {
+                bottom: 10px;
+                left: 5px;
+                right: 5px;
+                transform: none;
+                min-width: auto;
+                width: calc(100% - 10px);
+            }
+            
+            .time-slider-header {
+                padding: 6px 10px;
+            }
+            
+            .time-slider-header span {
+                font-size: 0.75rem;
+            }
+            
+            .time-slider-content {
+                padding: 8px 12px;
+            }
+            
+            #timeSlider {
+                width: 100% !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header {
+                padding: 0.4rem 0.5rem;
+            }
+            
+            .header h1 {
+                font-size: 0.9rem;
+            }
+            
+            .header-status {
+                gap: 0.4rem;
+                font-size: 0.65rem;
+            }
+            
+            .header-status .current-date {
+                padding: 0.15rem 0.3rem;
+                font-size: 0.65rem;
+            }
+            
+            .header-status .stats {
+                font-size: 0.6rem;
+            }
+            
+            .header-status .federal-status {
+                padding: 0.15rem 0.3rem;
+                font-size: 0.6rem;
+            }
+            
+            .legend-panel {
+                width: 140px;
+                max-width: 140px;
+            }
+            
+            .legend-panel calcite-panel {
+                --calcite-panel-width: 140px;
+            }
+            
+            .legend-content {
+                padding: 5px 6px;
+            }
+            
+            .legend-item {
+                margin-bottom: 2px;
+                font-size: 0.6rem;
+            }
+            
+            .legend-color {
+                width: 10px;
+                height: 10px;
+                margin-right: 5px;
+            }
+            
+            .time-slider-container {
+                bottom: 5px;
+                left: 3px;
+                right: 3px;
+                width: calc(100% - 6px);
+            }
+            
+            .time-slider-header {
+                padding: 5px 8px;
+            }
+            
+            .time-slider-header span {
+                font-size: 0.7rem;
+            }
+            
+            .time-slider-content {
+                padding: 6px 10px;
+            }
+            
+            #timeSlider {
+                width: 100% !important;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../index.html" class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Demos
+        </a>
+        <h1>Assault Weapons Ban Timeline</h1>
+        <div class="header-status">
+            <span class="current-date" id="currentDate">Loading...</span>
+            <span class="stats" id="statsInfo">Initializing...</span>
+            <span class="federal-status" id="federalStatus">Loading...</span>
+        </div>
+    </div>
+    
+    <div class="map-container">
+        <arcgis-map basemap="streets-navigation-vector" center="-98, 39.5" zoom="4">
+            <arcgis-zoom position="top-right"></arcgis-zoom>
+        </arcgis-map>
+        
+        <div class="legend-panel">
+            <calcite-panel heading="Legend" collapsible collapsed id="legendPanel">
+                <div class="legend-content">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: var(--weapon-banned);"></div>
+                        <span>Banned</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: var(--weapon-regulated);"></div>
+                        <span>Regulated</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: var(--weapon-unrestricted);"></div>
+                        <span>Unrestricted</span>
+                    </div>
+                    <div class="legend-item" style="border-top: 1px solid #eee; padding-top: 4px; margin-top: 4px;">
+                        <div class="legend-color" style="background-color: var(--federal-ban);"></div>
+                        <span>Federal Ban (1994-2004)</span>
+                    </div>
+                </div>
+            </calcite-panel>
+        </div>
+
+        <div class="time-slider-container" id="timeSliderContainer">
+            <div class="time-slider-header" onclick="toggleTimeSlider()">
+                <span><i class="fas fa-clock" style="margin-right: 6px;"></i>Timeline Controls</span>
+                <i class="fas fa-chevron-down time-slider-toggle"></i>
+            </div>
+            <div class="time-slider-content">
+                <div id="timeSlider"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    // Toggle time slider collapse/expand
+    function toggleTimeSlider() {
+      const container = document.getElementById('timeSliderContainer');
+      container.classList.toggle('collapsed');
+    }
+    
+    // Collapse time slider (called when popup opens)
+    function collapseTimeSlider() {
+      const container = document.getElementById('timeSliderContainer');
+      if (container && !container.classList.contains('collapsed')) {
+        container.classList.add('collapsed');
+      }
+    }
+    
+    // Assault Weapons Ban Timeline Data - Lookup by state name
+    // Historical dates sourced from state legislation records
+    const weaponsTimelineData = {
+      "California": {
+        "ban_date": "1989-01-01",
+        "status": "banned",
+        "timeline_events": [
+          { "date": "1989-01-01", "event": "First state assault weapons ban enacted (Roberti-Roos Act) after Stockton schoolyard shooting", "type": "state_ban" },
+          { "date": "1999-01-01", "event": ".50 caliber rifle restrictions added (AB 50)", "type": "expansion" },
+          { "date": "2016-07-01", "event": "Magazine capacity limited to 10 rounds", "type": "expansion" }
+        ]
+      },
+      "New Jersey": {
+        "ban_date": "1990-05-01",
+        "status": "banned",
+        "timeline_events": [
+          { "date": "1990-05-01", "event": "Second state to enact assault weapons ban", "type": "state_ban" },
+          { "date": "2018-06-13", "event": "Magazine capacity limited to 10 rounds (reduced from 15)", "type": "expansion" }
+        ]
+      },
+      "Hawaii": {
+        "ban_date": "1991-01-01",
+        "status": "banned",
+        "timeline_events": [
+          { "date": "1991-01-01", "event": "Assault pistol restrictions enacted", "type": "state_ban" },
+          { "date": "1992-01-01", "event": "Additional restrictions on assault weapons", "type": "expansion" }
+        ]
+      },
+      "Connecticut": {
+        "ban_date": "1993-07-01",
+        "status": "banned",
+        "timeline_events": [
+          { "date": "1993-07-01", "event": "State assault weapons ban enacted", "type": "state_ban" },
+          { "date": "2013-04-04", "event": "Comprehensive ban expansion after Sandy Hook shooting", "type": "expansion" },
+          { "date": "2013-04-04", "event": "Magazine capacity limited to 10 rounds", "type": "expansion" }
+        ]
+      },
+      "Massachusetts": {
+        "ban_date": "1998-01-01",
+        "status": "banned",
+        "timeline_events": [
+          { "date": "1998-01-01", "event": "State assault weapons ban enacted", "type": "state_ban" },
+          { "date": "2016-07-20", "event": "Attorney General enforcement notice on copycat weapons", "type": "expansion" },
+          { "date": "2024-07-25", "event": "Expanded assault weapons definition (HD 4885)", "type": "expansion" }
+        ]
+      },
+      "New York": {
+        "ban_date": "2000-09-01",
+        "status": "banned",
+        "timeline_events": [
+          { "date": "2000-09-01", "event": "State assault weapons ban enacted", "type": "state_ban" },
+          { "date": "2013-01-15", "event": "NY SAFE Act - expanded ban and 7-round magazine limit", "type": "expansion" },
+          { "date": "2022-07-01", "event": "Additional restrictions following Supreme Court ruling", "type": "expansion" }
+        ]
+      },
+      "Maryland": {
+        "ban_date": "2013-10-01",
+        "status": "banned",
+        "timeline_events": [
+          { "date": "2013-10-01", "event": "Firearm Safety Act bans 45 specific assault weapons", "type": "state_ban" },
+          { "date": "2013-10-01", "event": "Magazine capacity limited to 10 rounds", "type": "expansion" }
+        ]
+      },
+      "Colorado": {
+        "ban_date": "2013-07-01",
+        "status": "regulated",
+        "timeline_events": [
+          { "date": "2013-07-01", "event": "Magazine capacity limited to 15 rounds (HB 1224)", "type": "regulation" },
+          { "date": "2013-07-01", "event": "Universal background checks required", "type": "regulation" }
+        ]
+      },
+      "Delaware": {
+        "ban_date": "2022-06-30",
+        "status": "banned",
+        "timeline_events": [
+          { "date": "2022-06-30", "event": "Assault weapons ban enacted (HB 450)", "type": "state_ban" },
+          { "date": "2022-06-30", "event": "Magazine capacity limited to 17 rounds", "type": "expansion" }
+        ]
+      },
+      "Illinois": {
+        "ban_date": "2023-01-10",
+        "status": "banned",
+        "timeline_events": [
+          { "date": "2023-01-10", "event": "Protect Illinois Communities Act - assault weapons ban", "type": "state_ban" },
+          { "date": "2023-01-10", "event": "Magazine capacity limited to 10-15 rounds", "type": "expansion" }
+        ]
+      },
+      "Washington": {
+        "ban_date": "2023-04-25",
+        "status": "banned",
+        "timeline_events": [
+          { "date": "2023-04-25", "event": "Assault weapons ban enacted (HB 1240)", "type": "state_ban" },
+          { "date": "2022-07-01", "event": "Magazine capacity previously limited to 10 rounds (SB 5078)", "type": "expansion" }
+        ]
+      },
+      "Rhode Island": {
+        "ban_date": "2022-06-21",
+        "status": "regulated",
+        "timeline_events": [
+          { "date": "2022-06-21", "event": "Magazine capacity limited to 10 rounds", "type": "regulation" },
+          { "date": "2022-06-21", "event": "Open carry restrictions enacted", "type": "regulation" }
+        ]
+      },
+      "Vermont": {
+        "ban_date": "2018-04-11",
+        "status": "regulated",
+        "timeline_events": [
+          { "date": "2018-04-11", "event": "Magazine capacity limited to 10/15 rounds", "type": "regulation" },
+          { "date": "2018-04-11", "event": "Background checks expanded", "type": "regulation" }
+        ]
+      },
+      "Oregon": {
+        "ban_date": "2022-12-08",
+        "status": "regulated",
+        "timeline_events": [
+          { "date": "2022-12-08", "event": "Measure 114 - magazine capacity limited to 10 rounds", "type": "regulation" },
+          { "date": "2022-12-08", "event": "Permit required for firearm purchase", "type": "regulation" }
+        ]
+      },
+      "Minnesota": {
+        "ban_date": "2024-05-24",
+        "status": "regulated",
+        "timeline_events": [
+          { "date": "2024-05-24", "event": "Red flag law enacted", "type": "regulation" },
+          { "date": "2024-05-24", "event": "Enhanced background checks", "type": "regulation" }
+        ]
+      }
+    };
+
+    // Function to get regulation status based on date
+    function getRegulationStatus(stateName, currentDate) {
+      const stateData = weaponsTimelineData[stateName];
+      if (!stateData || !stateData.ban_date) {
+        return 'unrestricted';
+      }
+      
+      if (new Date(stateData.ban_date) <= currentDate) {
+        return stateData.status || 'banned';
+      }
+      
+      return 'unrestricted';
+    }
+
+    // Function to get color based on regulation status
+    function getRegulationColor(status, currentDate) {
+      const federalBanStart = new Date(1994, 8, 13);
+      const federalBanEnd = new Date(2004, 8, 13);
+      
+      if (currentDate >= federalBanStart && currentDate <= federalBanEnd) {
+        return '#5c6bc0';
+      }
+      
+      const colors = {
+        'banned': '#c62828',
+        'regulated': '#ff8f00', 
+        'unrestricted': '#2e7d32'
+      };
+      return colors[status] || '#cccccc';
+    }
+
+    // Function to check federal ban status
+    function getFederalBanStatus(currentDate) {
+      const federalBanStart = new Date(1994, 8, 13);
+      const federalBanEnd = new Date(2004, 8, 13);
+      
+      if (currentDate >= federalBanStart && currentDate <= federalBanEnd) {
+        return 'Federal Assault Weapons Ban Active';
+      }
+      return 'No Federal Ban';
+    }
+
+    // Function to load layers once the map is ready
+    function loadLayers(apiKey) {
+      // Load ALL modules upfront to avoid race conditions
+      require([
+        "esri/config",
+        "esri/layers/GeoJSONLayer",
+        "esri/layers/GraphicsLayer",
+        "esri/Graphic",
+        "esri/renderers/SimpleRenderer",
+        "esri/symbols/SimpleFillSymbol",
+        "esri/widgets/TimeSlider",
+        "esri/time/TimeExtent",
+        "esri/core/reactiveUtils"
+      ], function(
+        esriConfig,
+        GeoJSONLayer,
+        GraphicsLayer,
+        Graphic,
+        SimpleRenderer,
+        SimpleFillSymbol,
+        TimeSlider,
+        TimeExtent,
+        reactiveUtils
+      ) {
+        esriConfig.apiKey = apiKey;
+
+        function waitForMapComponent() {
+          if (customElements.get('arcgis-map')) {
+            const arcgisMap = document.querySelector("arcgis-map");
+            if (arcgisMap) {
+              arcgisMap.addEventListener("arcgisViewReadyChange", function(event) {
+                if (!event.target.ready) return;
+
+                try {
+                  const view = event.target.view;
+
+                  // Create base layer using US states GeoJSON
+                  const weaponsLayer = new GeoJSONLayer({
+                    url: "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json",
+                    title: "Assault Weapons Ban Timeline",
+                    visible: true,
+                    opacity: 1.0,
+                    renderer: new SimpleRenderer({
+                      symbol: new SimpleFillSymbol({
+                        color: [200, 200, 200, 0.8],
+                        outline: {
+                          color: [64, 64, 64, 0.8],
+                          width: 1
+                        }
+                      })
+                    }),
+                    popupTemplate: {
+                      title: "{name}",
+                      content: function(feature) {
+                        const stateName = feature.graphic.attributes.name;
+                        const stateData = weaponsTimelineData[stateName];
+
+                        let content = '<div style="max-width: 300px;">';
+                        content += '<h4>Assault Weapons Regulation History</h4>';
+
+                        if (stateData && stateData.ban_date) {
+                          const date = new Date(stateData.ban_date);
+                          content += `<p><strong>Status:</strong> ${stateData.status}</p>`;
+                          content += `<p><strong>Effective:</strong> ${date.toLocaleDateString()}</p>`;
+
+                          if (stateData.timeline_events && stateData.timeline_events.length > 0) {
+                            content += '<h5>Legislative Timeline:</h5>';
+                            stateData.timeline_events.forEach(event => {
+                              const eventDate = new Date(event.date);
+                              content += `<p><strong>${eventDate.getFullYear()}</strong>: ${event.event}</p>`;
+                            });
+                          }
+                        } else {
+                          content += '<p><strong>Status:</strong> No state-level assault weapons ban</p>';
+                        }
+
+                        content += '</div>';
+                        return content;
+                      }
+                    }
+                  });
+
+                  // Add base layer to map
+                  view.map.add(weaponsLayer);
+
+                  // Create graphics layer for colored states
+                  const coloredWeaponsLayer = new GraphicsLayer({
+                    title: "Colored Weapons Ban States"
+                  });
+                  view.map.add(coloredWeaponsLayer);
+
+                  // Create TimeSlider
+                  const timeSlider = new TimeSlider({
+                    container: "timeSlider",
+                    mode: "instant",
+                    fullTimeExtent: new TimeExtent({
+                      start: new Date(1989, 0, 1),
+                      end: new Date(2024, 11, 31)
+                    }),
+                    timeExtent: new TimeExtent({
+                      start: new Date(1989, 0, 1),
+                      end: new Date(1989, 0, 1)
+                    }),
+                    playRate: 1000,
+                    stops: {
+                      interval: {
+                        value: 1,
+                        unit: "years"
+                      }
+                    }
+                  });
+
+                  // Wait for layer to fully load, then pre-fetch all geometries once
+                  weaponsLayer.when(() => {
+                    console.log("GeoJSON layer loaded successfully");
+
+                    // Pre-load all state geometries once
+                    weaponsLayer.queryFeatures({
+                      where: "1=1",
+                      returnGeometry: true,
+                      outFields: ["*"]
+                    }).then(result => {
+                      console.log("Pre-loaded", result.features.length, "state geometries");
+                      
+                      // Store geometries in a Map for fast lookup
+                      const stateGeometries = new Map();
+                      result.features.forEach(feature => {
+                        stateGeometries.set(feature.attributes.name, feature);
+                      });
+
+                      // Define color update function using pre-loaded geometries
+                      function updateWeaponsColors(currentDate) {
+                        coloredWeaponsLayer.removeAll();
+                        
+                        // Iterate ALL states and color them appropriately
+                        stateGeometries.forEach((feature, stateName) => {
+                          const status = getRegulationStatus(stateName, currentDate);
+                          const color = getRegulationColor(status, currentDate);
+
+                          const graphic = new Graphic({
+                            geometry: feature.geometry,
+                            attributes: feature.attributes,
+                            symbol: new SimpleFillSymbol({
+                              color: color + "99", // Add transparency
+                              outline: {
+                                color: [64, 64, 64, 0.6],
+                                width: 0.5
+                              }
+                            }),
+                            popupTemplate: {
+                              title: "{name}",
+                              content: function(f) {
+                                const sName = f.graphic.attributes.name;
+                                const sData = weaponsTimelineData[sName];
+
+                                let content = '<div style="max-width: 300px;">';
+                                content += '<h4>Assault Weapons Regulation History</h4>';
+
+                                if (sData && sData.ban_date) {
+                                  const date = new Date(sData.ban_date);
+                                  content += `<p><strong>Status:</strong> ${sData.status}</p>`;
+                                  content += `<p><strong>Effective:</strong> ${date.toLocaleDateString()}</p>`;
+
+                                  if (sData.timeline_events && sData.timeline_events.length > 0) {
+                                    content += '<h5>Legislative Timeline:</h5>';
+                                    sData.timeline_events.forEach(event => {
+                                      const eventDate = new Date(event.date);
+                                      content += `<p><strong>${eventDate.getFullYear()}</strong>: ${event.event}</p>`;
+                                    });
+                                  }
+                                } else {
+                                  content += '<p><strong>Status:</strong> No state-level assault weapons ban</p>';
+                                }
+
+                                content += '</div>';
+                                return content;
+                              }
+                            }
+                          });
+                          coloredWeaponsLayer.add(graphic);
+                        });
+                      }
+
+                      // Update UI stats
+                      function updateStats(currentDate) {
+                        document.getElementById('currentDate').textContent =
+                          currentDate.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long'
+                          });
+
+                        document.getElementById('federalStatus').textContent =
+                          getFederalBanStatus(currentDate);
+
+                        let banned = 0;
+                        let regulated = 0;
+                        Object.keys(weaponsTimelineData).forEach(stateName => {
+                          const status = getRegulationStatus(stateName, currentDate);
+                          if (status === 'banned') banned++;
+                          if (status === 'regulated') regulated++;
+                        });
+
+                        document.getElementById('statsInfo').innerHTML =
+                          `States with bans: ${banned} | Regulated: ${regulated}`;
+                      }
+
+                      // Set up watch for timeline changes
+                      reactiveUtils.watch(
+                        () => timeSlider.timeExtent,
+                        (timeExtent) => {
+                          const currentDate = timeExtent.start;
+                          updateStats(currentDate);
+                          updateWeaponsColors(currentDate);
+                        }
+                      );
+
+                      // Initial update
+                      const initialDate = new Date(1989, 0, 1);
+                      updateStats(initialDate);
+                      updateWeaponsColors(initialDate);
+                      
+                      // Auto-collapse timeline when popup opens
+                      reactiveUtils.watch(
+                        () => view.popup.visible,
+                        (visible) => {
+                          if (visible) {
+                            collapseTimeSlider();
+                          }
+                        }
+                      );
+
+                    }).catch(error => {
+                      console.error("Failed to pre-load state geometries:", error);
+                    });
+
+                  }).catch(error => {
+                    console.error("Failed to load GeoJSON layer:", error);
+                  });
+
+                } catch (error) {
+                  console.error("Error loading assault weapons timeline:", error);
+                  alert("Could not load assault weapons timeline. See console for details.");
+                }
+              });
+            }
+          } else {
+            setTimeout(waitForMapComponent, 100);
+          }
+        }
+        waitForMapComponent();
+      });
+    }
+
+    // Config loader
+    function loadConfig() {
+      const baseUrl = window.location.hostname === 'kdmonroe.github.io' || window.location.hostname === 'kylemonroe.dev'
+        ? '/arcgis-js-maps/shared/config.js'
+        : '../shared/config.js';
+      
+      const configScript = document.createElement('script');
+      configScript.src = baseUrl;
+      configScript.onload = function() {
+        if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+          function waitForRequire() {
+            if (typeof require !== 'undefined') {
+              loadLayers(window.arcgisConfig.apiKey);
+            } else {
+              setTimeout(waitForRequire, 100);
+            }
+          }
+          waitForRequire();
+        } else {
+          console.error("API key not found in config.js.");
+          alert("API key not found. Please check your configuration (shared/config.js).");
+        }
+      };
+      
+      configScript.onerror = function() {
+        const altBaseUrl = window.location.pathname.includes('/arcgis-js-maps/')
+          ? '../shared/config.js'
+          : '/arcgis-js-maps/shared/config.js';
+        
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = altBaseUrl;
+        fallbackScript.onload = function() {
+          if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+            function waitForRequire() {
+              if (typeof require !== 'undefined') {
+                loadLayers(window.arcgisConfig.apiKey);
+              } else {
+                setTimeout(waitForRequire, 100);
+              }
+            }
+            waitForRequire();
+          } else {
+            console.error("API key not found in fallback config.js.");
+            alert("API key not found. Please check your configuration (shared/config.js).");
+          }
+        };
+        fallbackScript.onerror = function() {
+          console.error("Failed to load configuration from both paths.");
+          alert("Failed to load configuration. Please ensure 'shared/config.js' exists and is accessible.");
+        };
+        document.head.appendChild(fallbackScript);
+      };
+      document.head.appendChild(configScript);
+    }
+    
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadConfig);
+    } else {
+      loadConfig();
+    }
+    </script>
+</body>
+</html>
