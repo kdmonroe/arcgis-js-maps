@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <title>LGBTQ Rights Timeline | ArcGIS JS Maps</title>
+    
+    <!-- Stable script reference for ArcGIS SDK script injection -->
+    <!-- Prevents browser extension conflicts that cause "ma.parentNode is null" errors -->
+    <script src="../shared/arcgis-script-reference.js"></script>
+    
+    <!-- Calcite Components -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
+    
+    <!-- ArcGIS Maps SDK for JavaScript (NO DEFER - require must be available) -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.32/"></script>
+    
+    <!-- Load Map components from CDN with defer -->
+    <script defer type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
+    
+    <!-- Font Awesome for additional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Shared Mobile Responsive Styles -->
+    <link rel="stylesheet" href="../shared/mobile-responsive.css">
+
+    <style>
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+            --lgbtq-no-protection: #d32f2f;
+            --lgbtq-limited: #ff9800;
+            --lgbtq-moderate: #ffeb3b;
+            --lgbtq-strong: #4caf50;
+            --lgbtq-comprehensive: #2e7d32;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--calcite-sans-family);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.25rem;
+            margin: 0;
+        }
+        
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .header-status .current-date {
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+        
+        .header-status .stats {
+            opacity: 0.9;
+        }
+        
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            opacity: 0.8;
+        }
+        
+        .map-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+        
+        arcgis-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .legend-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            width: 160px;
+            max-width: 160px;
+        }
+        
+        .legend-panel calcite-panel {
+            --calcite-panel-width: 160px;
+            --calcite-panel-header-background-color: rgba(50, 50, 50, 0.9);
+            --calcite-panel-header-text-color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .legend-content {
+            padding: 8px 10px;
+            background: white;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            font-size: 0.75rem;
+            line-height: 1.3;
+        }
+        
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            margin-right: 8px;
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .time-slider-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 400px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .time-slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .time-slider-header:hover {
+            background: var(--primary-hover);
+        }
+        
+        .time-slider-header span {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .time-slider-toggle {
+            font-size: 0.75rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .time-slider-content {
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .time-slider-container.collapsed .time-slider-content {
+            display: none;
+        }
+        
+        .time-slider-container.collapsed .time-slider-toggle {
+            transform: rotate(180deg);
+        }
+        
+        .time-slider-container.collapsed {
+            min-width: auto;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.5rem 0.75rem;
+            }
+            
+            .header h1 {
+                font-size: 1rem;
+            }
+            
+            .header-status {
+                gap: 0.5rem;
+                font-size: 0.7rem;
+                flex-wrap: wrap;
+            }
+            
+            .header-status .current-date {
+                padding: 0.2rem 0.4rem;
+                font-size: 0.7rem;
+            }
+            
+            .header-status .stats {
+                font-size: 0.65rem;
+            }
+            
+            .legend-panel {
+                top: 5px;
+                left: 5px;
+                width: 140px;
+                max-width: 140px;
+            }
+            
+            .legend-panel calcite-panel {
+                --calcite-panel-width: 140px;
+            }
+            
+            .legend-content {
+                padding: 6px 8px;
+            }
+            
+            .legend-item {
+                margin-bottom: 3px;
+                font-size: 0.65rem;
+                line-height: 1.2;
+            }
+            
+            .legend-color {
+                width: 12px;
+                height: 12px;
+                margin-right: 6px;
+            }
+            
+            .time-slider-container {
+                bottom: 10px;
+                left: 5px;
+                right: 5px;
+                transform: none;
+                min-width: auto;
+                width: calc(100% - 10px);
+            }
+            
+            .time-slider-header {
+                padding: 6px 10px;
+            }
+            
+            .time-slider-header span {
+                font-size: 0.75rem;
+            }
+            
+            .time-slider-content {
+                padding: 8px 12px;
+            }
+            
+            #timeSlider {
+                width: 100% !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header {
+                padding: 0.4rem 0.5rem;
+            }
+            
+            .header h1 {
+                font-size: 0.9rem;
+            }
+            
+            .header-status {
+                gap: 0.4rem;
+                font-size: 0.65rem;
+            }
+            
+            .header-status .current-date {
+                padding: 0.15rem 0.3rem;
+                font-size: 0.65rem;
+            }
+            
+            .header-status .stats {
+                font-size: 0.6rem;
+            }
+            
+            .legend-panel {
+                width: 120px;
+                max-width: 120px;
+            }
+            
+            .legend-panel calcite-panel {
+                --calcite-panel-width: 120px;
+            }
+            
+            .legend-content {
+                padding: 5px 6px;
+            }
+            
+            .legend-item {
+                margin-bottom: 2px;
+                font-size: 0.6rem;
+            }
+            
+            .legend-color {
+                width: 10px;
+                height: 10px;
+                margin-right: 5px;
+            }
+            
+            .time-slider-container {
+                bottom: 5px;
+                left: 3px;
+                right: 3px;
+                width: calc(100% - 6px);
+            }
+            
+            .time-slider-header {
+                padding: 5px 8px;
+            }
+            
+            .time-slider-header span {
+                font-size: 0.7rem;
+            }
+            
+            .time-slider-content {
+                padding: 6px 10px;
+            }
+            
+            #timeSlider {
+                width: 100% !important;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../index.html" class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Demos
+        </a>
+        <h1>LGBTQ Rights Timeline</h1>
+        <div class="header-status">
+            <span class="current-date" id="currentDate">Loading...</span>
+            <span class="stats" id="statsInfo">Initializing...</span>
+        </div>
+    </div>
+    
+    <div class="map-container">
+        <arcgis-map basemap="streets-navigation-vector" center="-98, 39.5" zoom="4">
+            <arcgis-zoom position="top-right"></arcgis-zoom>
+        </arcgis-map>
+        
+        <div class="legend-panel">
+            <calcite-panel heading="Legend" collapsible collapsed id="legendPanel">
+                <div class="legend-content">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: var(--lgbtq-comprehensive);"></div>
+                        <span>Comprehensive</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: var(--lgbtq-strong);"></div>
+                        <span>Strong</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: var(--lgbtq-moderate);"></div>
+                        <span>Moderate</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: var(--lgbtq-limited);"></div>
+                        <span>Limited</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: var(--lgbtq-no-protection);"></div>
+                        <span>No Protection</span>
+                    </div>
+                </div>
+            </calcite-panel>
+        </div>
+
+        <div class="time-slider-container" id="timeSliderContainer">
+            <div class="time-slider-header" onclick="toggleTimeSlider()">
+                <span><i class="fas fa-clock" style="margin-right: 6px;"></i>Timeline Controls</span>
+                <i class="fas fa-chevron-down time-slider-toggle"></i>
+            </div>
+            <div class="time-slider-content">
+                <div id="timeSlider"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    // Toggle time slider collapse/expand
+    function toggleTimeSlider() {
+      const container = document.getElementById('timeSliderContainer');
+      container.classList.toggle('collapsed');
+    }
+    
+    // Collapse time slider (called when popup opens)
+    function collapseTimeSlider() {
+      const container = document.getElementById('timeSliderContainer');
+      if (container && !container.classList.contains('collapsed')) {
+        container.classList.add('collapsed');
+      }
+    }
+    
+    // LGBTQ Rights Timeline Data - Lookup by state name
+    // Historical dates sourced from state legislation records and court decisions
+    const lgbtqTimelineData = {
+      "Massachusetts": {
+        "marriage_equality": "2004-05-17",
+        "non_discrimination": "1989-12-07",
+        "adoption_rights": "2004-05-17",
+        "healthcare_protections": "2011-10-01",
+        "timeline_events": [
+          { "date": "1989-12-07", "event": "Non-discrimination protections enacted", "category": "employment" },
+          { "date": "2004-05-17", "event": "First state to legalize same-sex marriage (Goodridge v. Dept. of Public Health)", "category": "marriage" },
+          { "date": "2011-10-01", "event": "Transgender healthcare protections expanded", "category": "healthcare" }
+        ]
+      },
+      "California": {
+        "marriage_equality": "2013-06-28",
+        "non_discrimination": "1992-01-01",
+        "adoption_rights": "2013-06-28",
+        "healthcare_protections": "2005-01-01",
+        "timeline_events": [
+          { "date": "1992-01-01", "event": "Employment non-discrimination law enacted (AB 101)", "category": "employment" },
+          { "date": "2005-01-01", "event": "Gender identity healthcare protections", "category": "healthcare" },
+          { "date": "2013-06-28", "event": "Marriage equality restored (Hollingsworth v. Perry)", "category": "marriage" }
+        ]
+      },
+      "Connecticut": {
+        "marriage_equality": "2008-11-12",
+        "non_discrimination": "1991-10-01",
+        "adoption_rights": "2008-11-12",
+        "healthcare_protections": "2011-07-01",
+        "timeline_events": [
+          { "date": "1991-10-01", "event": "Sexual orientation non-discrimination protections", "category": "employment" },
+          { "date": "2008-11-12", "event": "Marriage equality legalized (Kerrigan v. Commissioner)", "category": "marriage" },
+          { "date": "2011-07-01", "event": "Gender identity non-discrimination protections added", "category": "employment" }
+        ]
+      },
+      "Vermont": {
+        "marriage_equality": "2009-09-01",
+        "non_discrimination": "1992-01-01",
+        "adoption_rights": "2000-07-01",
+        "healthcare_protections": "2007-01-01",
+        "timeline_events": [
+          { "date": "1992-01-01", "event": "Sexual orientation non-discrimination law", "category": "employment" },
+          { "date": "2000-07-01", "event": "Civil unions legalized (first in nation)", "category": "marriage" },
+          { "date": "2009-09-01", "event": "First state to legalize same-sex marriage via legislature", "category": "marriage" }
+        ]
+      },
+      "Iowa": {
+        "marriage_equality": "2009-04-03",
+        "non_discrimination": "2007-05-25",
+        "adoption_rights": "2009-04-03",
+        "timeline_events": [
+          { "date": "2007-05-25", "event": "Sexual orientation & gender identity non-discrimination law", "category": "employment" },
+          { "date": "2009-04-03", "event": "Marriage equality via unanimous state Supreme Court (Varnum v. Brien)", "category": "marriage" }
+        ]
+      },
+      "New Hampshire": {
+        "marriage_equality": "2010-01-01",
+        "non_discrimination": "1998-01-01",
+        "adoption_rights": "2010-01-01",
+        "timeline_events": [
+          { "date": "1998-01-01", "event": "Sexual orientation non-discrimination law", "category": "employment" },
+          { "date": "2010-01-01", "event": "Marriage equality legalized via legislature", "category": "marriage" },
+          { "date": "2018-07-12", "event": "Gender identity non-discrimination protections added", "category": "employment" }
+        ]
+      },
+      "New York": {
+        "marriage_equality": "2011-07-24",
+        "non_discrimination": "2002-12-17",
+        "adoption_rights": "2011-07-24",
+        "healthcare_protections": "2015-01-01",
+        "timeline_events": [
+          { "date": "2002-12-17", "event": "Sexual orientation non-discrimination law (SONDA)", "category": "employment" },
+          { "date": "2011-07-24", "event": "Marriage Equality Act signed into law", "category": "marriage" },
+          { "date": "2019-01-25", "event": "Gender Expression Non-Discrimination Act (GENDA)", "category": "employment" }
+        ]
+      },
+      "Washington": {
+        "marriage_equality": "2012-12-06",
+        "non_discrimination": "2006-01-01",
+        "adoption_rights": "2012-12-06",
+        "timeline_events": [
+          { "date": "2006-01-01", "event": "Sexual orientation non-discrimination law", "category": "employment" },
+          { "date": "2006-01-01", "event": "Gender identity non-discrimination protections", "category": "employment" },
+          { "date": "2012-12-06", "event": "Marriage equality via voter referendum (R-74)", "category": "marriage" }
+        ]
+      },
+      "Maine": {
+        "marriage_equality": "2012-12-29",
+        "non_discrimination": "2005-01-01",
+        "adoption_rights": "2012-12-29",
+        "timeline_events": [
+          { "date": "2005-01-01", "event": "Sexual orientation non-discrimination law", "category": "employment" },
+          { "date": "2012-12-29", "event": "First state to legalize same-sex marriage via popular vote (Question 1)", "category": "marriage" }
+        ]
+      },
+      "Maryland": {
+        "marriage_equality": "2013-01-01",
+        "non_discrimination": "2001-05-15",
+        "adoption_rights": "2013-01-01",
+        "timeline_events": [
+          { "date": "2001-05-15", "event": "Sexual orientation non-discrimination law", "category": "employment" },
+          { "date": "2013-01-01", "event": "Marriage equality via voter referendum (Question 6)", "category": "marriage" },
+          { "date": "2014-10-01", "event": "Gender identity non-discrimination protections (Fairness for All Marylanders Act)", "category": "employment" }
+        ]
+      },
+      "Minnesota": {
+        "marriage_equality": "2013-08-01",
+        "non_discrimination": "1993-01-01",
+        "adoption_rights": "2013-08-01",
+        "timeline_events": [
+          { "date": "1993-01-01", "event": "Sexual orientation non-discrimination law (second state after Wisconsin)", "category": "employment" },
+          { "date": "2013-08-01", "event": "Marriage equality legalized via legislature", "category": "marriage" },
+          { "date": "2023-05-24", "event": "Trans Refuge State legislation enacted", "category": "healthcare" }
+        ]
+      },
+      "Delaware": {
+        "marriage_equality": "2013-07-01",
+        "non_discrimination": "2009-07-02",
+        "adoption_rights": "2013-07-01",
+        "timeline_events": [
+          { "date": "2009-07-02", "event": "Sexual orientation non-discrimination law", "category": "employment" },
+          { "date": "2013-01-01", "event": "Gender identity non-discrimination protections", "category": "employment" },
+          { "date": "2013-07-01", "event": "Marriage equality legalized via legislature", "category": "marriage" }
+        ]
+      },
+      "Rhode Island": {
+        "marriage_equality": "2013-08-01",
+        "non_discrimination": "1995-01-01",
+        "adoption_rights": "2013-08-01",
+        "timeline_events": [
+          { "date": "1995-01-01", "event": "Sexual orientation non-discrimination law", "category": "employment" },
+          { "date": "2001-07-01", "event": "Gender identity non-discrimination protections", "category": "employment" },
+          { "date": "2013-08-01", "event": "Marriage equality legalized via legislature", "category": "marriage" }
+        ]
+      },
+      "Hawaii": {
+        "marriage_equality": "2013-12-02",
+        "non_discrimination": "1991-01-01",
+        "adoption_rights": "2013-12-02",
+        "timeline_events": [
+          { "date": "1991-01-01", "event": "Sexual orientation non-discrimination law", "category": "employment" },
+          { "date": "2011-07-06", "event": "Civil unions legalized", "category": "marriage" },
+          { "date": "2013-12-02", "event": "Marriage equality legalized (Hawaii Marriage Equality Act)", "category": "marriage" }
+        ]
+      },
+      "Illinois": {
+        "marriage_equality": "2014-06-01",
+        "non_discrimination": "2005-01-21",
+        "adoption_rights": "2014-06-01",
+        "timeline_events": [
+          { "date": "2005-01-21", "event": "Sexual orientation non-discrimination law", "category": "employment" },
+          { "date": "2006-01-01", "event": "Gender identity non-discrimination protections", "category": "employment" },
+          { "date": "2014-06-01", "event": "Marriage equality legalized via legislature", "category": "marriage" }
+        ]
+      },
+      "New Mexico": {
+        "marriage_equality": "2013-12-19",
+        "non_discrimination": "2003-04-08",
+        "adoption_rights": "2013-12-19",
+        "timeline_events": [
+          { "date": "2003-04-08", "event": "Sexual orientation & gender identity non-discrimination law", "category": "employment" },
+          { "date": "2013-12-19", "event": "Marriage equality via state Supreme Court (Griego v. Oliver)", "category": "marriage" }
+        ]
+      },
+      "Wisconsin": {
+        "non_discrimination": "1982-02-25",
+        "timeline_events": [
+          { "date": "1982-02-25", "event": "First state to ban discrimination based on sexual orientation", "category": "employment" }
+        ]
+      },
+      "New Jersey": {
+        "marriage_equality": "2013-10-21",
+        "non_discrimination": "1992-01-19",
+        "adoption_rights": "2013-10-21",
+        "timeline_events": [
+          { "date": "1992-01-19", "event": "Sexual orientation non-discrimination law", "category": "employment" },
+          { "date": "2006-12-21", "event": "Civil unions legalized", "category": "marriage" },
+          { "date": "2007-06-29", "event": "Gender identity non-discrimination protections", "category": "employment" },
+          { "date": "2013-10-21", "event": "Marriage equality via state court (Garden State Equality v. Dow)", "category": "marriage" }
+        ]
+      },
+      "Oregon": {
+        "marriage_equality": "2014-05-19",
+        "non_discrimination": "2007-05-09",
+        "adoption_rights": "2014-05-19",
+        "timeline_events": [
+          { "date": "2007-05-09", "event": "Sexual orientation & gender identity non-discrimination law", "category": "employment" },
+          { "date": "2014-05-19", "event": "Marriage equality via federal court (Geiger v. Kitzhaber)", "category": "marriage" }
+        ]
+      },
+      "Colorado": {
+        "marriage_equality": "2014-10-07",
+        "non_discrimination": "2007-05-29",
+        "adoption_rights": "2014-10-07",
+        "timeline_events": [
+          { "date": "2007-05-29", "event": "Sexual orientation non-discrimination law", "category": "employment" },
+          { "date": "2008-05-29", "event": "Gender identity non-discrimination protections", "category": "employment" },
+          { "date": "2014-10-07", "event": "Marriage equality via federal court", "category": "marriage" }
+        ]
+      },
+      "Nevada": {
+        "marriage_equality": "2014-10-09",
+        "non_discrimination": "1999-10-01",
+        "adoption_rights": "2014-10-09",
+        "timeline_events": [
+          { "date": "1999-10-01", "event": "Sexual orientation non-discrimination law", "category": "employment" },
+          { "date": "2011-06-02", "event": "Gender identity non-discrimination protections", "category": "employment" },
+          { "date": "2014-10-09", "event": "Marriage equality via federal court (Sevcik v. Sandoval)", "category": "marriage" }
+        ]
+      }
+    };
+
+    // Function to calculate protection level based on date
+    function calculateProtectionLevel(stateName, currentDate) {
+      const stateData = lgbtqTimelineData[stateName];
+      if (!stateData) return 'none';
+      
+      const events = stateData.timeline_events || [];
+      let score = 0;
+      
+      events.forEach(event => {
+        if (new Date(event.date) <= currentDate) {
+          switch(event.category) {
+            case 'marriage': score += 30; break;
+            case 'employment': score += 20; break;
+            case 'healthcare': score += 20; break;
+            case 'adoption': score += 15; break;
+            case 'housing': score += 15; break;
+          }
+        }
+      });
+      
+      if (score >= 80) return 'comprehensive';
+      if (score >= 60) return 'strong'; 
+      if (score >= 40) return 'moderate';
+      if (score >= 20) return 'limited';
+      return 'none';
+    }
+
+    // Function to get color based on protection level
+    function getProtectionColor(level) {
+      const colors = {
+        'comprehensive': '#2e7d32',
+        'strong': '#4caf50',
+        'moderate': '#ffeb3b', 
+        'limited': '#ff9800',
+        'none': '#d32f2f'
+      };
+      return colors[level] || '#cccccc';
+    }
+
+    // Function to load layers once the map is ready
+    function loadLayers(apiKey) {
+      // Load ALL modules upfront to avoid race conditions
+      require([
+        "esri/config",
+        "esri/layers/GeoJSONLayer",
+        "esri/layers/GraphicsLayer",
+        "esri/Graphic",
+        "esri/renderers/SimpleRenderer",
+        "esri/symbols/SimpleFillSymbol",
+        "esri/widgets/TimeSlider",
+        "esri/time/TimeExtent",
+        "esri/core/reactiveUtils"
+      ], function(
+        esriConfig,
+        GeoJSONLayer,
+        GraphicsLayer,
+        Graphic,
+        SimpleRenderer,
+        SimpleFillSymbol,
+        TimeSlider,
+        TimeExtent,
+        reactiveUtils
+      ) {
+        esriConfig.apiKey = apiKey;
+
+        // Wait for the arcgis-map element to be defined
+        function waitForMapComponent() {
+          if (customElements.get('arcgis-map')) {
+            const arcgisMap = document.querySelector("arcgis-map");
+            if (arcgisMap) {
+              arcgisMap.addEventListener("arcgisViewReadyChange", function(event) {
+                if (!event.target.ready) return;
+
+                try {
+                  const view = event.target.view;
+
+                  // Create base layer using US states GeoJSON
+                  const lgbtqLayer = new GeoJSONLayer({
+                    url: "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json",
+                    title: "LGBTQ Rights Timeline",
+                    renderer: new SimpleRenderer({
+                      symbol: new SimpleFillSymbol({
+                        color: [128, 128, 128, 0.6],
+                        outline: {
+                          color: [64, 64, 64, 0.8],
+                          width: 1
+                        }
+                      })
+                    }),
+                    popupTemplate: {
+                      title: "{name}",
+                      content: function(feature) {
+                        const stateName = feature.graphic.attributes.name;
+                        const stateData = lgbtqTimelineData[stateName];
+
+                        let content = '<div style="max-width: 300px;">';
+                        content += '<h4>LGBTQ Rights Milestones</h4>';
+
+                        if (stateData && stateData.timeline_events && stateData.timeline_events.length > 0) {
+                          stateData.timeline_events.forEach(event => {
+                            const date = new Date(event.date);
+                            content += `<p><strong>${date.getFullYear()}</strong>: ${event.event}</p>`;
+                          });
+                        } else {
+                          content += '<p>No major LGBTQ rights legislation tracked for this state.</p>';
+                        }
+
+                        content += '</div>';
+                        return content;
+                      }
+                    }
+                  });
+
+                  // Add base layer to map
+                  view.map.add(lgbtqLayer);
+
+                  // Create graphics layer for colored states
+                  const coloredStatesLayer = new GraphicsLayer({
+                    title: "Colored LGBTQ States"
+                  });
+                  view.map.add(coloredStatesLayer);
+
+                  // Create TimeSlider
+                  const timeSlider = new TimeSlider({
+                    container: "timeSlider",
+                    mode: "instant",
+                    fullTimeExtent: new TimeExtent({
+                      start: new Date(1970, 0, 1),
+                      end: new Date(2024, 11, 31)
+                    }),
+                    timeExtent: new TimeExtent({
+                      start: new Date(1970, 0, 1),
+                      end: new Date(1970, 0, 1)
+                    }),
+                    playRate: 1000,
+                    stops: {
+                      interval: {
+                        value: 1,
+                        unit: "years"
+                      }
+                    }
+                  });
+
+                  // Wait for layer to fully load, then pre-fetch all geometries once
+                  lgbtqLayer.when(() => {
+                    console.log("GeoJSON layer loaded successfully");
+
+                    // Pre-load all state geometries once
+                    lgbtqLayer.queryFeatures({
+                      where: "1=1",
+                      returnGeometry: true,
+                      outFields: ["*"]
+                    }).then(result => {
+                      console.log("Pre-loaded", result.features.length, "state geometries");
+                      
+                      // Store geometries in a Map for fast lookup
+                      const stateGeometries = new Map();
+                      result.features.forEach(feature => {
+                        stateGeometries.set(feature.attributes.name, feature);
+                      });
+
+                      // Define color update function using pre-loaded geometries
+                      function updateLGBTQColors(currentDate) {
+                        coloredStatesLayer.removeAll();
+                        
+                        // Iterate ALL states and color them appropriately
+                        stateGeometries.forEach((feature, stateName) => {
+                          const protectionLevel = calculateProtectionLevel(stateName, currentDate);
+                          const color = getProtectionColor(protectionLevel);
+
+                          const graphic = new Graphic({
+                            geometry: feature.geometry,
+                            attributes: feature.attributes,
+                            symbol: new SimpleFillSymbol({
+                              color: color + "99", // Add transparency
+                              outline: {
+                                color: [64, 64, 64, 0.6],
+                                width: 0.5
+                              }
+                            }),
+                            popupTemplate: {
+                              title: "{name}",
+                              content: function(f) {
+                                const sName = f.graphic.attributes.name;
+                                const sData = lgbtqTimelineData[sName];
+
+                                let content = '<div style="max-width: 300px;">';
+                                content += '<h4>LGBTQ Rights Milestones</h4>';
+
+                                if (sData && sData.timeline_events && sData.timeline_events.length > 0) {
+                                  sData.timeline_events.forEach(event => {
+                                    const date = new Date(event.date);
+                                    content += `<p><strong>${date.getFullYear()}</strong>: ${event.event}</p>`;
+                                  });
+                                } else {
+                                  content += '<p>No major LGBTQ rights legislation tracked for this state.</p>';
+                                }
+
+                                content += '</div>';
+                                return content;
+                              }
+                            }
+                          });
+                          coloredStatesLayer.add(graphic);
+                        });
+                      }
+
+                      // Update UI stats
+                      function updateStats(currentDate) {
+                        document.getElementById('currentDate').textContent =
+                          currentDate.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long'
+                          });
+
+                        // Calculate statistics for ALL states in the data
+                        let stats = {comprehensive: 0, strong: 0, moderate: 0, limited: 0, none: 0};
+
+                        Object.keys(lgbtqTimelineData).forEach(stateName => {
+                          const level = calculateProtectionLevel(stateName, currentDate);
+                          stats[level]++;
+                        });
+
+                        document.getElementById('statsInfo').innerHTML =
+                          `States with strong+ protection: ${stats.comprehensive + stats.strong} | ` +
+                          `Moderate: ${stats.moderate} | Limited: ${stats.limited}`;
+                      }
+
+                      // Set up watch for timeline changes
+                      reactiveUtils.watch(
+                        () => timeSlider.timeExtent,
+                        (timeExtent) => {
+                          const currentDate = timeExtent.start;
+                          updateStats(currentDate);
+                          updateLGBTQColors(currentDate);
+                        }
+                      );
+
+                      // Initial update
+                      const initialDate = new Date(1970, 0, 1);
+                      updateStats(initialDate);
+                      updateLGBTQColors(initialDate);
+                      
+                      // Auto-collapse timeline when popup opens
+                      reactiveUtils.watch(
+                        () => view.popup.visible,
+                        (visible) => {
+                          if (visible) {
+                            collapseTimeSlider();
+                          }
+                        }
+                      );
+
+                    }).catch(error => {
+                      console.error("Failed to pre-load state geometries:", error);
+                    });
+
+                  }).catch(error => {
+                    console.error("Failed to load GeoJSON layer:", error);
+                  });
+
+                } catch (error) {
+                  console.error("Error loading LGBTQ rights timeline:", error);
+                  alert("Could not load LGBTQ rights timeline. See console for details.");
+                }
+              });
+            }
+          } else {
+            setTimeout(waitForMapComponent, 100);
+          }
+        }
+        waitForMapComponent();
+      });
+    }
+
+    // Config loader
+    function loadConfig() {
+      const baseUrl = window.location.hostname === 'kdmonroe.github.io' || window.location.hostname === 'kylemonroe.dev'
+        ? '/arcgis-js-maps/shared/config.js'
+        : '../shared/config.js';
+      
+      const configScript = document.createElement('script');
+      configScript.src = baseUrl;
+      configScript.onload = function() {
+        if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+          function waitForRequire() {
+            if (typeof require !== 'undefined') {
+              loadLayers(window.arcgisConfig.apiKey);
+            } else {
+              setTimeout(waitForRequire, 100);
+            }
+          }
+          waitForRequire();
+        } else {
+          console.error("API key not found in config.js.");
+          alert("API key not found. Please check your configuration (shared/config.js).");
+        }
+      };
+      
+      configScript.onerror = function() {
+        const altBaseUrl = window.location.pathname.includes('/arcgis-js-maps/')
+          ? '../shared/config.js'
+          : '/arcgis-js-maps/shared/config.js';
+        
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = altBaseUrl;
+        fallbackScript.onload = function() {
+          if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+            function waitForRequire() {
+              if (typeof require !== 'undefined') {
+                loadLayers(window.arcgisConfig.apiKey);
+              } else {
+                setTimeout(waitForRequire, 100);
+              }
+            }
+            waitForRequire();
+          } else {
+            console.error("API key not found in fallback config.js.");
+            alert("API key not found. Please check your configuration (shared/config.js).");
+          }
+        };
+        fallbackScript.onerror = function() {
+          console.error("Failed to load configuration from both paths.");
+          alert("Failed to load configuration. Please ensure 'shared/config.js' exists and is accessible.");
+        };
+        document.head.appendChild(fallbackScript);
+      };
+      document.head.appendChild(configScript);
+    }
+    
+    // Wait for DOM to be ready, then load config
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadConfig);
+    } else {
+      loadConfig();
+    }
+    </script>
+</body>
+</html>
