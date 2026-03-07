@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <title>NASA PACE Earth Observation Viewer | ArcGIS JS Maps</title>
+
+    <!-- Stable script reference for ArcGIS SDK script injection -->
+    <script src="../shared/arcgis-script-reference.js"></script>
+
+    <!-- Calcite Components -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
+
+    <!-- ArcGIS Maps SDK for JavaScript -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/dark/main.css" />
+    <script src="https://js.arcgis.com/4.32/"></script>
+
+    <!-- Font Awesome for additional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--calcite-sans-family);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            opacity: 0.8;
+        }
+
+        .map-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+
+        arcgis-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls-panel {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(30, 30, 30, 0.92);
+            color: #e0e0e0;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+            z-index: 1000;
+            width: 300px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .controls-panel h3 {
+            margin: 0 0 12px 0;
+            font-size: 1rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls-panel h3 i {
+            color: #4fc3f7;
+        }
+
+        .product-btn {
+            display: block;
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            background: rgba(255,255,255,0.08);
+            color: #e0e0e0;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .product-btn:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .product-btn.active {
+            background: rgba(79, 195, 247, 0.25);
+            border-color: #4fc3f7;
+            color: #fff;
+        }
+
+        .product-btn .product-name {
+            font-weight: 600;
+            display: block;
+        }
+
+        .product-btn .product-sub {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .info-section {
+            margin-top: 14px;
+            padding: 12px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 6px;
+            border-left: 3px solid #4fc3f7;
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        .info-section .info-title {
+            font-weight: 600;
+            color: #4fc3f7;
+            margin-bottom: 4px;
+        }
+
+        .color-ramp {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            gap: 6px;
+            font-size: 0.75rem;
+        }
+
+        .color-ramp .ramp-bar {
+            flex: 1;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .opacity-control {
+            margin-top: 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .opacity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #ccc;
+            background: rgba(255,255,255,0.05);
+            transition: background 0.2s ease;
+        }
+
+        .opacity-header:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .opacity-header i:first-child {
+            color: #4fc3f7;
+            margin-right: 6px;
+        }
+
+        .opacity-chevron {
+            font-size: 0.7rem;
+            transition: transform 0.2s ease;
+        }
+
+        .opacity-chevron.open {
+            transform: rotate(180deg);
+        }
+
+        .opacity-body {
+            padding: 10px 10px 6px;
+        }
+
+        .opacity-slider {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .opacity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+        }
+
+        .opacity-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+            border: none;
+        }
+
+        .opacity-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .opacity-labels #opacity-value {
+            color: #4fc3f7;
+            font-weight: 600;
+        }
+
+        .data-note {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.75rem;
+            color: #888;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.1rem; }
+            .controls-panel {
+                width: 220px;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../index.html" class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Demos
+        </a>
+        <h1>NASA PACE Earth Observation Viewer</h1>
+        <div></div>
+    </div>
+
+    <div class="map-container">
+        <arcgis-map basemap="dark-gray-vector" center="0, 20" zoom="2">
+            <arcgis-zoom position="top-left"></arcgis-zoom>
+        </arcgis-map>
+
+        <div class="controls-panel">
+            <h3><i class="fas fa-satellite"></i> PACE Products</h3>
+
+            <button class="product-btn active" data-product="chlorophyll">
+                <span class="product-name">Chlorophyll-a</span>
+                <span class="product-sub">Ocean color concentration</span>
+            </button>
+            <button class="product-btn" data-product="ndvi">
+                <span class="product-name">Vegetation Index (NDVI)</span>
+                <span class="product-sub">Land vegetation health</span>
+            </button>
+            <button class="product-btn" data-product="aerosol">
+                <span class="product-name">Aerosol Optical Depth</span>
+                <span class="product-sub">Atmospheric particles</span>
+            </button>
+            <button class="product-btn" data-product="wavelength">
+                <span class="product-name">Apparent Visible Wavelength</span>
+                <span class="product-sub">Ocean optical properties</span>
+            </button>
+
+            <div class="info-section" id="product-info">
+                <div class="info-title">Chlorophyll-a Concentration</div>
+                <p>Measures phytoplankton abundance in the ocean. Higher concentrations (green) indicate productive marine areas critical for the ocean food web and carbon cycle.</p>
+                <div class="color-ramp">
+                    <span>Low</span>
+                    <div class="ramp-bar" style="background: linear-gradient(to right, #0d0887, #3b528b, #21918c, #5ec962, #fde725);"></div>
+                    <span>High</span>
+                </div>
+            </div>
+
+            <div class="opacity-control">
+                <div class="opacity-header" id="opacity-toggle">
+                    <span><i class="fas fa-sliders-h"></i> Layer Opacity</span>
+                    <i class="fas fa-chevron-down opacity-chevron"></i>
+                </div>
+                <div class="opacity-body" id="opacity-body" style="display: none;">
+                    <input type="range" id="opacity-slider" min="0" max="100" value="100" class="opacity-slider">
+                    <div class="opacity-labels">
+                        <span>0%</span>
+                        <span id="opacity-value">100%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-note">
+                <i class="fas fa-info-circle"></i> Data from NASA PACE OCI satellite, 8-day composites. Showing latest available imagery.
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const mapComponentsScript = document.createElement('script');
+      mapComponentsScript.type = 'module';
+      mapComponentsScript.src = 'https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js';
+      document.head.appendChild(mapComponentsScript);
+    });
+
+    const productInfo = {
+      chlorophyll: {
+        title: "Chlorophyll-a Concentration",
+        description: "Measures phytoplankton abundance in the ocean. Higher concentrations (green) indicate productive marine areas critical for the ocean food web and carbon cycle.",
+        ramp: "linear-gradient(to right, #0d0887, #3b528b, #21918c, #5ec962, #fde725)"
+      },
+      ndvi: {
+        title: "Vegetation Index (NDVI)",
+        description: "Normalized Difference Vegetation Index measuring land vegetation health and density. Green indicates dense, healthy vegetation; brown indicates sparse or stressed vegetation.",
+        ramp: "linear-gradient(to right, #8c510a, #d8b365, #f6e8c3, #c7eae5, #5ab4ac, #01665e)"
+      },
+      aerosol: {
+        title: "Aerosol Optical Depth",
+        description: "Measures the amount of aerosol particles (dust, smoke, pollution) in the atmosphere. Higher values indicate hazier conditions with more suspended particles.",
+        ramp: "linear-gradient(to right, #2166ac, #67a9cf, #fddbc7, #ef8a62, #b2182b)"
+      },
+      wavelength: {
+        title: "Apparent Visible Wavelength",
+        description: "Shows the dominant wavelength of light leaving the ocean surface. Shorter wavelengths (blue) indicate clear open ocean; longer wavelengths indicate coastal or productive waters.",
+        ramp: "linear-gradient(to right, #440154, #31688e, #35b779, #fde725)"
+      }
+    };
+
+    let layers = {};
+    let activeProduct = "chlorophyll";
+
+    function loadLayers(apiKey) {
+      require([
+        "esri/config",
+        "esri/layers/ImageryLayer",
+        "esri/renderers/RasterStretchRenderer",
+        "esri/rest/support/AlgorithmicColorRamp",
+        "esri/rest/support/MultipartColorRamp",
+        "esri/Color"
+      ], function(esriConfig, ImageryLayer, RasterStretchRenderer, AlgorithmicColorRamp, MultipartColorRamp, Color) {
+        esriConfig.apiKey = apiKey;
+
+        function buildColorRamp(hexColors) {
+          var ramps = [];
+          for (var i = 0; i < hexColors.length - 1; i++) {
+            ramps.push(new AlgorithmicColorRamp({
+              fromColor: new Color(hexColors[i]),
+              toColor: new Color(hexColors[i + 1]),
+              algorithm: "lab-lch"
+            }));
+          }
+          return new MultipartColorRamp({ colorRamps: ramps });
+        }
+
+        layers.chlorophyll = new ImageryLayer({
+          url: "https://gis.earthdata.nasa.gov/image/rest/services/GESDISC/PACE_OCI_L3M_CHL/ImageServer",
+          title: "Chlorophyll-a Concentration",
+          visible: true,
+          useViewTime: false,
+          renderer: new RasterStretchRenderer({
+            stretchType: "min-max",
+            colorRamp: buildColorRamp(["#0d0887", "#3b528b", "#21918c", "#5ec962", "#fde725"]),
+            statistics: [{ min: 0, max: 15, avg: 3, stddev: 4 }]
+          })
+        });
+
+        layers.ndvi = new ImageryLayer({
+          url: "https://gis.earthdata.nasa.gov/image/rest/services/GESDISC/PACE_OCI_L3M_LANDVI/ImageServer",
+          title: "Vegetation Index (NDVI)",
+          visible: false,
+          useViewTime: false,
+          renderer: new RasterStretchRenderer({
+            stretchType: "min-max",
+            colorRamp: buildColorRamp(["#8c510a", "#d8b365", "#f6e8c3", "#c7eae5", "#5ab4ac", "#01665e"]),
+            statistics: [{ min: -1, max: 1, avg: 0.3, stddev: 0.4 }]
+          })
+        });
+
+        layers.aerosol = new ImageryLayer({
+          url: "https://gis.earthdata.nasa.gov/image/rest/services/GESDISC/PACE_OCI_L3M_AOD/ImageServer",
+          title: "Aerosol Optical Depth",
+          visible: false,
+          useViewTime: false,
+          renderer: new RasterStretchRenderer({
+            stretchType: "min-max",
+            colorRamp: buildColorRamp(["#2166ac", "#67a9cf", "#fddbc7", "#ef8a62", "#b2182b"]),
+            statistics: [{ min: 0, max: 5, avg: 0.5, stddev: 1 }]
+          })
+        });
+
+        layers.wavelength = new ImageryLayer({
+          url: "https://gis.earthdata.nasa.gov/image/rest/services/GESDISC/PACE_OCI_L3M_AVW/ImageServer",
+          title: "Apparent Visible Wavelength",
+          visible: false,
+          useViewTime: false,
+          renderer: new RasterStretchRenderer({
+            stretchType: "min-max",
+            colorRamp: buildColorRamp(["#440154", "#31688e", "#35b779", "#fde725"]),
+            statistics: [{ min: 350, max: 750, avg: 500, stddev: 100 }]
+          })
+        });
+
+        function waitForMapComponent() {
+          if (customElements.get('arcgis-map')) {
+            const arcgisMap = document.querySelector("arcgis-map");
+            if (arcgisMap) {
+              arcgisMap.addEventListener("arcgisViewReadyChange", function(event) {
+                if (!event.target.ready) return;
+
+                try {
+                  const mapView = event.target;
+                  Object.values(layers).forEach(function(layer) {
+                    mapView.map.add(layer);
+                  });
+                } catch (error) {
+                  console.error("Error loading map layers:", error);
+                }
+              });
+            }
+          } else {
+            setTimeout(waitForMapComponent, 100);
+          }
+        }
+        waitForMapComponent();
+      });
+    }
+
+    // Product switching
+    document.querySelectorAll(".product-btn").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var product = this.getAttribute("data-product");
+        if (product === activeProduct) return;
+
+        document.querySelectorAll(".product-btn").forEach(function(b) {
+          b.classList.remove("active");
+        });
+        this.classList.add("active");
+
+        // Toggle layer visibility
+        if (layers[activeProduct]) layers[activeProduct].visible = false;
+        activeProduct = product;
+        if (layers[activeProduct]) layers[activeProduct].visible = true;
+
+        // Update info panel
+        var info = productInfo[product];
+        var infoEl = document.getElementById("product-info");
+        infoEl.innerHTML =
+          '<div class="info-title">' + info.title + '</div>' +
+          '<p>' + info.description + '</p>' +
+          '<div class="color-ramp">' +
+            '<span>Low</span>' +
+            '<div class="ramp-bar" style="background: ' + info.ramp + ';"></div>' +
+            '<span>High</span>' +
+          '</div>';
+
+        // Reset opacity slider to match new layer's opacity
+        var slider = document.getElementById("opacity-slider");
+        var currentOpacity = layers[activeProduct] ? Math.round(layers[activeProduct].opacity * 100) : 100;
+        slider.value = currentOpacity;
+        document.getElementById("opacity-value").textContent = currentOpacity + "%";
+
+      });
+    });
+
+    // Opacity control
+    document.getElementById("opacity-toggle").addEventListener("click", function() {
+      var body = document.getElementById("opacity-body");
+      var chevron = this.querySelector(".opacity-chevron");
+      if (body.style.display === "none") {
+        body.style.display = "block";
+        chevron.classList.add("open");
+      } else {
+        body.style.display = "none";
+        chevron.classList.remove("open");
+      }
+    });
+
+    document.getElementById("opacity-slider").addEventListener("input", function() {
+      var val = this.value / 100;
+      document.getElementById("opacity-value").textContent = this.value + "%";
+      if (layers[activeProduct]) {
+        layers[activeProduct].opacity = val;
+      }
+    });
+
+    // Config loader
+    function loadConfig() {
+      var baseUrl = window.location.hostname === 'kdmonroe.github.io' || window.location.hostname === 'kylemonroe.dev'
+        ? '/arcgis-js-maps/shared/config.js'
+        : '../shared/config.js';
+
+      var configScript = document.createElement('script');
+      configScript.src = baseUrl;
+      configScript.onload = function() {
+        if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+          function waitForRequire() {
+            if (typeof require !== 'undefined') {
+              loadLayers(window.arcgisConfig.apiKey);
+            } else {
+              setTimeout(waitForRequire, 100);
+            }
+          }
+          waitForRequire();
+        } else {
+          console.error("API key not found in config.js");
+          alert("API key not found. Please check your configuration (shared/config.js).");
+        }
+      };
+
+      configScript.onerror = function() {
+        var altBaseUrl = window.location.pathname.includes('/arcgis-js-maps/')
+          ? '../shared/config.js'
+          : '/arcgis-js-maps/shared/config.js';
+
+        var fallbackScript = document.createElement('script');
+        fallbackScript.src = altBaseUrl;
+        fallbackScript.onload = function() {
+          if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+            function waitForRequire() {
+              if (typeof require !== 'undefined') {
+                loadLayers(window.arcgisConfig.apiKey);
+              } else {
+                setTimeout(waitForRequire, 100);
+              }
+            }
+            waitForRequire();
+          } else {
+            console.error("API key not found in config.js using fallback path.");
+            alert("API key not found. Please check your configuration (shared/config.js).");
+          }
+        };
+        fallbackScript.onerror = function() {
+          console.error("Failed to load configuration from both paths.");
+          alert("Failed to load configuration. Please ensure 'shared/config.js' exists.");
+        };
+        document.head.appendChild(fallbackScript);
+      };
+      document.head.appendChild(configScript);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadConfig);
+    } else {
+      loadConfig();
+    }
+    </script>
+</body>
+</html>
