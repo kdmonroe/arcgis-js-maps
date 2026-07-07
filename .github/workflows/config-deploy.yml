@@ -1,8 +1,10 @@
 name: Deploy Config File
 
+# Dispatch-only: deploy.yml already injects the API key on every push to
+# master; running both on push makes them race to push gh-pages. Use this
+# workflow manually (Actions -> Deploy Config File -> Run workflow) to
+# rotate the key without a full redeploy.
 on:
-  push:
-    branches: [ master ]
   workflow_dispatch:
 
 jobs:
