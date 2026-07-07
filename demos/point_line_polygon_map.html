@@ -179,7 +179,8 @@
                 const graphicsLayer = new GraphicsLayer();
                 
                 arcgisMap.map = new Map({
-                    basemap: "gray-3d",
+                    // gray-vector: the gray-3d basemap's SceneLayers can't render in a 2D MapView
+                    basemap: "gray-vector",
                     layers: [graphicsLayer]
                 });
                 
