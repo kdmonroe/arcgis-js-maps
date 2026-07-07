@@ -97,8 +97,8 @@
   </div>
   
   <div class="map-container">
-      <!-- Reverted to original gray-3d basemap -->
-      <arcgis-map basemap="gray-3d" zoom="7" center="-79.379966, 43.740473"></arcgis-map>
+      <!-- gray-vector: the gray-3d basemap's SceneLayers can't render in a 2D MapView -->
+      <arcgis-map basemap="gray-vector" zoom="7" center="-79.379966, 43.740473"></arcgis-map>
   </div>
 
   <script>
