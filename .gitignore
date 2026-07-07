@@ -1,4 +1,5 @@
 *.mdc
+shared/config.js
 shared/map_template.html
 shared/arcgis-script-reference.js
 # SpecStory explanation file
@@ -7,4 +8,16 @@ shared/arcgis-script-reference.js
 .DS_Store
 .cursorindexingignore
 README-GithubPages.md
+
+# Claude Code / AI assistant documentation (local only)
+CLAUDE.md
+IMAGE_REPLACEMENT_GUIDE.md
+MOBILE_RESPONSIVENESS_GUIDE.md
+TIMELINE_MAPS_HANDOFF.md
+claude_code_zai_env.sh
+.claude/
+
+# IDE configuration
+.cursor/
+.vscode/
 

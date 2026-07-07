@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <title>African American Historic Landmarks | ArcGIS JS Maps</title>
+    
+    <!-- Stable script reference for ArcGIS SDK script injection -->
+    <script src="../shared/arcgis-script-reference.js"></script>
+    
+    <!-- Calcite Components -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
+    
+    <!-- ArcGIS Maps SDK for JavaScript with defer -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <script defer src="https://js.arcgis.com/4.32/"></script>
+    
+    <!-- Load Map components from CDN with defer -->
+    <script defer type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
+    
+    <!-- Font Awesome for additional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Shared Mobile Responsive Styles -->
+    <link rel="stylesheet" href="../shared/mobile-responsive.css">
+
+    <style>
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+            --historic-church: #8B4513;
+            --historic-museum: #4169E1;
+            --historic-monument: #2F4F4F;
+            --historic-site: #8B008B;
+            --historic-building: #CD853F;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--calcite-sans-family);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            opacity: 0.8;
+        }
+        
+        .map-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+        
+        arcgis-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Legend panel styling */
+        .legend-panel {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 250px;
+        }
+
+        /* Timeline info panel styling */
+        .timeline-info-panel {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        /* Time slider panel styling */
+        .time-slider-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 500px;
+        }
+
+        .legend-panel h3 {
+            margin: 0 0 12px 0;
+            font-size: 1.1rem;
+            color: var(--text-color);
+        }
+        
+        .timeline-info-panel h4 {
+            margin: 0 0 8px 0;
+            color: var(--text-color);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .legend-item span {
+            display: inline-block;
+            white-space: nowrap;
+            color: var(--text-color);
+        }
+
+        .current-date {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .stats {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .era-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        /* Responsive scaling */
+        @media (max-width: 768px) {
+            .legend-panel {
+                min-width: 200px;
+                right: 10px;
+                top: 10px;
+            }
+
+            .timeline-info-panel {
+                max-width: 250px;
+                left: 10px;
+                top: 200px;
+            }
+
+            .time-slider-panel {
+                min-width: calc(100% - 30px);
+                left: 15px;
+                transform: none;
+            }
+
+            .legend-panel h3 {
+                font-size: 1rem;
+            }
+        }
+    </style>
+  <script defer src="../shared/key-health.js"></script>
+</head>
+<body>
+    <div class="header">
+        <a href="../index.html" class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Demos
+        </a>
+        <h1>African American Historic Landmarks Timeline</h1>
+        <div></div>
+    </div>
+    
+    <div class="map-container">
+        <arcgis-map basemap="hybrid" center="-73.9442, 40.8080" zoom="13">
+            <arcgis-zoom position="top-right"></arcgis-zoom>
+        </arcgis-map>
+        
+        <!-- Timeline Info Panel -->
+        <div class="timeline-info-panel">
+            <h4>Timeline Status</h4>
+            <div class="current-date" id="currentDate">Loading...</div>
+            <div class="stats" id="statsInfo">Initializing data...</div>
+            <div class="era-badge" id="eraBadge">Loading era...</div>
+        </div>
+        
+        <!-- Legend Panel -->
+        <div class="legend-panel">
+            <h3>Historic Landmark Types</h3>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: var(--historic-church); border-radius: 50%;"></div>
+                <span>● Churches</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: var(--historic-museum);"></div>
+                <span>■ Museums</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: var(--historic-monument); transform: rotate(45deg);"></div>
+                <span>◆ Monuments</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: var(--historic-site); clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>
+                <span>▲ Historic Sites</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: var(--historic-building); border-radius: 50%;"></div>
+                <span>● Buildings</span>
+            </div>
+        </div>
+
+        <!-- Time Slider Panel -->
+        <div class="time-slider-panel">
+            <div id="timeSlider"></div>
+        </div>
+    </div>
+    
+    <script>
+
+    // African American Historic Landmarks Data
+    // This is sample data - in production, this would come from OpenStreetMap via Overpass API
+    const landmarksData = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [-73.9442, 40.8080]
+          },
+          "properties": {
+            "name": "Abyssinian Baptist Church",
+            "historic_type": "church",
+            "year_established": 1808,
+            "description": "Founded in 1808, the Abyssinian Baptist Church is one of the oldest African American churches in the United States. Under the leadership of Adam Clayton Powell Sr. and Jr., it became a powerhouse of civil rights activism and community service.",
+            "significance": "Major center of civil rights activism and community leadership in Harlem",
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Abyssinian_Baptist_Church.jpg/320px-Abyssinian_Baptist_Church.jpg"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [-73.9503, 40.8116]
+          },
+          "properties": {
+            "name": "Apollo Theater",
+            "historic_type": "building",
+            "year_established": 1914,
+            "description": "The legendary Apollo Theater opened in 1914 and became the premier venue for African American performers. Its famous Amateur Night launched the careers of Ella Fitzgerald, James Brown, Stevie Wonder, and countless others.",
+            "significance": "Cultural epicenter of African American entertainment and the Harlem Renaissance",
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Apollo_Theater%2C_Harlem.jpg/320px-Apollo_Theater%2C_Harlem.jpg"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [-73.9485, 40.8075]
+          },
+          "properties": {
+            "name": "Schomburg Center for Research in Black Culture",
+            "historic_type": "museum",
+            "year_established": 1925,
+            "description": "Named after Afro-Puerto Rican scholar Arturo Alfonso Schomburg, this research library houses over 11 million items documenting the global Black experience. It's a division of the New York Public Library and a National Historic Landmark.",
+            "significance": "World's leading institution for research on Black culture",
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Schomburg_Center.jpg/320px-Schomburg_Center.jpg"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [-73.9387, 40.8089]
+          },
+          "properties": {
+            "name": "Langston Hughes House",
+            "historic_type": "site",
+            "year_established": 1947,
+            "description": "From 1947 until his death in 1967, this brownstone was home to Langston Hughes, the celebrated poet, novelist, and playwright. Here he wrote some of his most important works and mentored young writers.",
+            "significance": "Literary landmark and National Historic Landmark",
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/20_East_127th_Street.jpg/320px-20_East_127th_Street.jpg"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [-73.9515, 40.8095]
+          },
+          "properties": {
+            "name": "Hotel Theresa",
+            "historic_type": "building",
+            "year_established": 1913,
+            "description": "Known as the 'Waldorf of Harlem,' this 13-story hotel became a symbol of Black excellence when it began accepting African American guests in 1940. Fidel Castro famously stayed here in 1960, and it hosted everyone from Muhammad Ali to Malcolm X.",
+            "significance": "Social and political hub during the Harlem Renaissance and Civil Rights era",
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Hotel_Theresa_by_David_Shankbone.jpg/240px-Hotel_Theresa_by_David_Shankbone.jpg"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [-73.9470, 40.8118]
+          },
+          "properties": {
+            "name": "Strivers' Row",
+            "historic_type": "site",
+            "year_established": 1891,
+            "description": "These elegant row houses on West 138th and 139th Streets were designed by renowned architects and became home to Harlem's Black elite—doctors, lawyers, musicians, and entrepreneurs—earning the nickname 'Strivers' Row.'",
+            "significance": "Symbol of Black achievement and upward mobility",
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/St._Nicholas_Historic_District.jpg/320px-St._Nicholas_Historic_District.jpg"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [-73.9520, 40.8070]
+          },
+          "properties": {
+            "name": "Marcus Garvey Park",
+            "historic_type": "monument",
+            "year_established": 1973,
+            "description": "Originally Mount Morris Park, it was renamed in 1973 to honor Marcus Garvey, the influential Pan-African leader and founder of the Universal Negro Improvement Association. The park features the last remaining fire watchtower in Manhattan.",
+            "significance": "Community gathering space and symbol of Black pride",
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Marcus_Garvey_Park_fire_tower.jpg/240px-Marcus_Garvey_Park_fire_tower.jpg"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [-73.9430, 40.8100]
+          },
+          "properties": {
+            "name": "Mother AME Zion Church",
+            "historic_type": "church",
+            "year_established": 1796,
+            "description": "Founded in 1796, Mother AME Zion is the oldest African American church in New York State. Known as the 'Freedom Church,' it was a station on the Underground Railroad and counted Frederick Douglass, Sojourner Truth, and Harriet Tubman among its members.",
+            "significance": "Freedom Church - station on the Underground Railroad",
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Mother_AME_Zion_Church_Harlem_NYC.jpg/240px-Mother_AME_Zion_Church_Harlem_NYC.jpg"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [-73.9500, 40.8050]
+          },
+          "properties": {
+            "name": "National Jazz Museum in Harlem",
+            "historic_type": "museum",
+            "year_established": 1997,
+            "description": "Established in 1997, this museum celebrates Harlem's pivotal role in jazz history. Through exhibits, performances, and educational programs, it preserves the legacy of legends like Duke Ellington, Billie Holiday, and Thelonious Monk.",
+            "significance": "Preserves the legacy of Harlem's jazz age",
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Jazz_Museum_in_Harlem.jpg/320px-Jazz_Museum_in_Harlem.jpg"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [-73.9410, 40.8130]
+          },
+          "properties": {
+            "name": "Harriet Tubman Memorial",
+            "historic_type": "monument",
+            "year_established": 2008,
+            "description": "Unveiled in 2008, this memorial honors Harriet Tubman, the fearless conductor of the Underground Railroad who made 13 missions to rescue approximately 70 enslaved people. The sculpture depicts her strength and determination.",
+            "significance": "Commemorates freedom fighter and abolitionist",
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Harriet_Tubman_Memorial%2C_Harlem%2C_NYC.jpg/240px-Harriet_Tubman_Memorial%2C_Harlem%2C_NYC.jpg"
+          }
+        }
+      ]
+    };
+
+    // Function to get color based on landmark type
+    function getLandmarkColor(type) {
+      const colors = {
+        'church': '#8B4513',
+        'museum': '#4169E1',
+        'monument': '#2F4F4F',
+        'site': '#8B008B',
+        'building': '#CD853F'
+      };
+      return colors[type] || '#808080';
+    }
+
+    // Function to get era description
+    function getEraDescription(year) {
+      if (year < 1865) return 'Slavery Era';
+      if (year < 1877) return 'Reconstruction Era';
+      if (year < 1920) return 'Jim Crow Era';
+      if (year < 1940) return 'Harlem Renaissance';
+      if (year < 1968) return 'Civil Rights Movement';
+      if (year < 2000) return 'Post-Civil Rights Era';
+      return 'Contemporary Era';
+    }
+
+    // Function to load layers once the map is ready
+    function loadLayers(apiKey) {
+      require([
+        "esri/config",
+        "esri/layers/GeoJSONLayer", 
+        "esri/renderers/UniqueValueRenderer",
+        "esri/symbols/SimpleMarkerSymbol",
+        "esri/widgets/TimeSlider",
+        "esri/time/TimeExtent",
+        "esri/core/reactiveUtils"
+      ], function(
+        esriConfig,
+        GeoJSONLayer,
+        UniqueValueRenderer,
+        SimpleMarkerSymbol,
+        TimeSlider,
+        TimeExtent,
+        reactiveUtils
+      ) {
+        esriConfig.apiKey = apiKey;
+        
+        function waitForMapComponent() {
+          if (customElements.get('arcgis-map')) {
+            const arcgisMap = document.querySelector("arcgis-map");
+            if (arcgisMap) {
+              arcgisMap.addEventListener("arcgisViewReadyChange", function(event) {
+                if (!event.target.ready) return;
+                
+                try {
+                  const view = event.target.view;
+                  
+                  console.log("🏛️ Creating GeoJSONLayer with landmarks data");
+                  
+                  // Create unique value renderer for landmark types with improved symbols
+                  const renderer = new UniqueValueRenderer({
+                    field: "historic_type",
+                    uniqueValueInfos: [
+                      {
+                        value: "church",
+                        symbol: new SimpleMarkerSymbol({
+                          style: "circle",
+                          color: getLandmarkColor('church'),
+                          size: 14,
+                          outline: {
+                            color: [255, 255, 255, 0.9],
+                            width: 2.5
+                          }
+                        }),
+                        label: "Churches"
+                      },
+                      {
+                        value: "museum",
+                        symbol: new SimpleMarkerSymbol({
+                          style: "square",
+                          color: getLandmarkColor('museum'),
+                          size: 14,
+                          outline: {
+                            color: [255, 255, 255, 0.9],
+                            width: 2.5
+                          }
+                        }),
+                        label: "Museums"
+                      },
+                      {
+                        value: "monument",
+                        symbol: new SimpleMarkerSymbol({
+                          style: "diamond",
+                          color: getLandmarkColor('monument'),
+                          size: 14,
+                          outline: {
+                            color: [255, 255, 255, 0.9],
+                            width: 2.5
+                          }
+                        }),
+                        label: "Monuments"
+                      },
+                      {
+                        value: "site",
+                        symbol: new SimpleMarkerSymbol({
+                          style: "triangle",
+                          color: getLandmarkColor('site'),
+                          size: 14,
+                          outline: {
+                            color: [255, 255, 255, 0.9],
+                            width: 2.5
+                          }
+                        }),
+                        label: "Historic Sites"
+                      },
+                      {
+                        value: "building",
+                        symbol: new SimpleMarkerSymbol({
+                          style: "circle",
+                          color: getLandmarkColor('building'),
+                          size: 14,
+                          outline: {
+                            color: [255, 255, 255, 0.9],
+                            width: 2.5
+                          }
+                        }),
+                        label: "Buildings"
+                      }
+                    ]
+                  });
+                  
+                  // Create a blob URL from the landmarks data
+                  const blob = new Blob([JSON.stringify(landmarksData)], {
+                    type: "application/json"
+                  });
+                  const url = URL.createObjectURL(blob);
+                  
+                  const landmarksLayer = new GeoJSONLayer({
+                    url: url,
+                    title: "African American Historic Landmarks",
+                    renderer: renderer,
+                    outFields: ["*"],
+                    popupTemplate: {
+                      title: "{name}",
+                      content: `
+                        <div style="max-width: 400px;">
+                          <img src="{image_url}" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 10px;" onerror="this.style.display='none'">
+                          <p><strong>Year Established:</strong> {year_established}</p>
+                          <p><strong>Type:</strong> {historic_type}</p>
+                          <p><strong>Description:</strong><br>{description}</p>
+                          <p style="background-color: #f0f7ff; padding: 10px; border-left: 4px solid #0078CA; margin-top: 10px;">
+                            <strong>Historical Significance:</strong><br>{significance}
+                          </p>
+                        </div>
+                      `
+                    }
+                  });
+
+                  // Create TimeSlider
+                  const timeSlider = new TimeSlider({
+                    container: "timeSlider",
+                    view: view,
+                    mode: "instant",
+                    fullTimeExtent: new TimeExtent({
+                      start: new Date(1790, 0, 1),
+                      end: new Date(2024, 11, 31)
+                    }),
+                    timeExtent: new TimeExtent({
+                      start: new Date(2024, 11, 31),
+                      end: new Date(2024, 11, 31) 
+                    }),
+                    playRate: 1000,
+                    stops: {
+                      interval: {
+                        value: 10,
+                        unit: "years"
+                      }
+                    }
+                  });
+
+                  // Update info panel based on time
+                  reactiveUtils.watch(
+                    () => timeSlider.timeExtent,
+                    (timeExtent) => {
+                      const currentDate = timeExtent.start;
+                      const year = currentDate.getFullYear();
+                      
+                      document.getElementById('currentDate').textContent = year;
+                      document.getElementById('eraBadge').textContent = getEraDescription(year);
+
+                      // Count visible landmarks
+                      let visibleCount = 0;
+                      landmarksData.features.forEach(feature => {
+                        if (feature.properties.year_established <= year) {
+                          visibleCount++;
+                        }
+                      });
+
+                      document.getElementById('statsInfo').innerHTML = 
+                        `Landmarks established by ${year}: ${visibleCount} of ${landmarksData.features.length}`;
+                    }
+                  );
+                  
+                  console.log("🏛️ Adding landmarksLayer to map...");
+                  view.map.add(landmarksLayer);
+                  
+                  // Initial update
+                  document.getElementById('currentDate').textContent = '2024';
+                  document.getElementById('eraBadge').textContent = getEraDescription(2024);
+                  document.getElementById('statsInfo').innerHTML = 
+                    `Landmarks established by 2024: ${landmarksData.features.length} of ${landmarksData.features.length}`;
+                  
+                } catch (error) {
+                  console.error("Error loading landmarks:", error);
+                  alert("Could not load landmarks. See console for details.");
+                }
+              });
+            }
+          } else {
+            setTimeout(waitForMapComponent, 100);
+          }
+        }
+        waitForMapComponent();
+      });
+    }
+
+    // Config loader
+    function loadConfig() {
+      const baseUrl = window.location.hostname === 'kdmonroe.github.io' || window.location.hostname === 'kylemonroe.dev'
+        ? '/arcgis-js-maps/shared/config.js'
+        : '../shared/config.js';
+      
+      const configScript = document.createElement('script');
+      configScript.src = baseUrl;
+      configScript.onload = function() {
+        if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+          function waitForRequire() {
+            if (typeof require !== 'undefined') {
+              loadLayers(window.arcgisConfig.apiKey);
+            } else {
+              setTimeout(waitForRequire, 100);
+            }
+          }
+          waitForRequire();
+        } else {
+          console.error("API key not found in config.js.");
+          alert("API key not found. Please check your configuration (shared/config.js).");
+        }
+      };
+      
+      configScript.onerror = function() {
+        const altBaseUrl = window.location.pathname.includes('/arcgis-js-maps/')
+          ? '../shared/config.js'
+          : '/arcgis-js-maps/shared/config.js';
+        
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = altBaseUrl;
+        fallbackScript.onload = function() {
+          if (window.arcgisConfig && window.arcgisConfig.apiKey) {
+            function waitForRequire() {
+              if (typeof require !== 'undefined') {
+                loadLayers(window.arcgisConfig.apiKey);
+              } else {
+                setTimeout(waitForRequire, 100);
+              }
+            }
+            waitForRequire();
+          } else {
+            console.error("API key not found in fallback config.js.");
+            alert("API key not found. Please check your configuration (shared/config.js).");
+          }
+        };
+        fallbackScript.onerror = function() {
+          console.error("Failed to load configuration from both paths.");
+          alert("Failed to load configuration. Please ensure 'shared/config.js' exists and is accessible.");
+        };
+        document.head.appendChild(fallbackScript);
+      };
+      document.head.appendChild(configScript);
+    }
+    
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadConfig);
+    } else {
+      loadConfig();
+    }
+    </script>
+</body>
+</html>
