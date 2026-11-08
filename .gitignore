@@ -1,5 +1,4 @@
 *.mdc
-shared/config.js
 shared/map_template.html
 shared/arcgis-script-reference.js
 # SpecStory explanation file
