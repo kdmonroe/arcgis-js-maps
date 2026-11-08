@@ -84,8 +84,9 @@
         if (json && json.error && (json.error.code === 498 || json.error.code === 499)) {
           console.warn("[key-health] ArcGIS API key rejected:", json.error);
           showBanner(
-            "ArcGIS API key is invalid or expired — basemaps and hosted layers may not load. " +
-            "Rotate the key and update shared/config.js (local) / the ARCGIS_API_KEY secret (deploy)."
+            "ArcGIS API key was rejected — basemaps and hosted layers may not load. " +
+            "The key may be expired, or its allowed referrers may not include this site " +
+            "(Safari only sends the origin, e.g. https://kdmonroe.github.io; localhost needs a dev key)."
           );
         } else {
           console.info("[key-health] ArcGIS API key OK");
@@ -95,6 +96,16 @@
         // Network hiccup or offline: not evidence of a bad key, stay quiet.
         console.warn("[key-health] key check skipped:", err);
       });
+  }
+
+  // Opened straight from disk: browsers block fetch() of local data files and
+  // send no referrer, so both local GeoJSON and the API key will fail.
+  if (window.location.protocol === "file:") {
+    showBanner(
+      "This page was opened from a file, so local data and the ArcGIS API key won't work. " +
+      "Serve the repo (python3 -m http.server 8000) and open http://localhost:8000/ instead."
+    );
+    return;
   }
 
   var waited = 0;
