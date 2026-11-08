@@ -1,1 +1,1 @@
-window.arcgisConfig = { apiKey: "pbpaste" };
+window.arcgisConfig = { apiKey: "AAPTay5SBrKkNj-PtPpFXovtJGw..FUj0BBH3mMn2xX9_QyAQdVHckpobFLQSzJwyOyFCtecqdKv0BfxUBIBoKDpK5922ZDK9UbZuoNicNb0HEFFmLYcab17lMjoQ7BlrM1pwDyo_2RIeASjVVwhqlL4hbWRYHK6Ll0z0clg9XI8ZOFfmEQ8FhRUoMzHkaL6kPF0A5jZoeToagu_ZX_HryNQW6m3DHSOOFyiuG2_x8b0eqWEUL0pAhl6pNq0gZlD45gGpIamsLg18l4ebIlObxw..AT1_HwwTyVJS" };
