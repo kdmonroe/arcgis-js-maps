@@ -1,0 +1,762 @@
+[
+ {
+  "state": "Alabama",
+  "state_abbr": "AL",
+  "seats": 7,
+  "fra_districts": 2,
+  "fra_seats": 7,
+  "current_districts": 7,
+  "partisanship": {
+   "dem_pct": 35,
+   "rep_pct": 65
+  },
+  "page_conversion": {
+   "from": 7,
+   "to": 2
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-alabama/"
+ },
+ {
+  "state": "Alaska",
+  "state_abbr": "AK",
+  "seats": 1,
+  "fra_districts": 1,
+  "fra_seats": 1,
+  "current_districts": 1,
+  "partisanship": null,
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-alaska/"
+ },
+ {
+  "state": "Arizona",
+  "state_abbr": "AZ",
+  "seats": 9,
+  "fra_districts": 3,
+  "fra_seats": 9,
+  "current_districts": 9,
+  "partisanship": {
+   "dem_pct": 48,
+   "rep_pct": 52
+  },
+  "page_conversion": {
+   "from": 9,
+   "to": 3
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-arizona/"
+ },
+ {
+  "state": "Arkansas",
+  "state_abbr": "AR",
+  "seats": 4,
+  "fra_districts": 1,
+  "fra_seats": 4,
+  "current_districts": 4,
+  "partisanship": {
+   "dem_pct": 34,
+   "rep_pct": 66
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-arkansas/"
+ },
+ {
+  "state": "California",
+  "state_abbr": "CA",
+  "seats": 52,
+  "fra_districts": 12,
+  "fra_seats": 52,
+  "current_districts": 52,
+  "partisanship": {
+   "dem_pct": 62,
+   "rep_pct": 38
+  },
+  "page_conversion": {
+   "from": 52,
+   "to": 12
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-california/"
+ },
+ {
+  "state": "Colorado",
+  "state_abbr": "CO",
+  "seats": 8,
+  "fra_districts": 2,
+  "fra_seats": 8,
+  "current_districts": 8,
+  "partisanship": {
+   "dem_pct": 55,
+   "rep_pct": 45
+  },
+  "page_conversion": {
+   "from": 8,
+   "to": 2
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-colorado/"
+ },
+ {
+  "state": "Connecticut",
+  "state_abbr": "CT",
+  "seats": 5,
+  "fra_districts": 1,
+  "fra_seats": 5,
+  "current_districts": 5,
+  "partisanship": {
+   "dem_pct": 58,
+   "rep_pct": 42
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-connecticut/"
+ },
+ {
+  "state": "Delaware",
+  "state_abbr": "DE",
+  "seats": 1,
+  "fra_districts": 1,
+  "fra_seats": 1,
+  "current_districts": 1,
+  "partisanship": null,
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-delaware/"
+ },
+ {
+  "state": "Florida",
+  "state_abbr": "FL",
+  "seats": 28,
+  "fra_districts": 6,
+  "fra_seats": 28,
+  "current_districts": 28,
+  "partisanship": {
+   "dem_pct": 46,
+   "rep_pct": 54
+  },
+  "page_conversion": {
+   "from": 28,
+   "to": 6
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-florida/"
+ },
+ {
+  "state": "Georgia",
+  "state_abbr": "GA",
+  "seats": 14,
+  "fra_districts": 4,
+  "fra_seats": 14,
+  "current_districts": 14,
+  "partisanship": {
+   "dem_pct": 48,
+   "rep_pct": 52
+  },
+  "page_conversion": {
+   "from": 14,
+   "to": 4
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-georgia/"
+ },
+ {
+  "state": "Hawaii",
+  "state_abbr": "HI",
+  "seats": 2,
+  "fra_districts": 1,
+  "fra_seats": 2,
+  "current_districts": 2,
+  "partisanship": {
+   "dem_pct": 63,
+   "rep_pct": 37
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-hawaii/"
+ },
+ {
+  "state": "Idaho",
+  "state_abbr": "ID",
+  "seats": 2,
+  "fra_districts": 1,
+  "fra_seats": 2,
+  "current_districts": 2,
+  "partisanship": {
+   "dem_pct": 32,
+   "rep_pct": 68
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-idaho/"
+ },
+ {
+  "state": "Illinois",
+  "state_abbr": "IL",
+  "seats": 17,
+  "fra_districts": 5,
+  "fra_seats": 17,
+  "current_districts": 17,
+  "partisanship": {
+   "dem_pct": 56,
+   "rep_pct": 44
+  },
+  "page_conversion": {
+   "from": 17,
+   "to": 5
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-illinois/"
+ },
+ {
+  "state": "Indiana",
+  "state_abbr": "IN",
+  "seats": 9,
+  "fra_districts": 3,
+  "fra_seats": 9,
+  "current_districts": 9,
+  "partisanship": {
+   "dem_pct": 40,
+   "rep_pct": 60
+  },
+  "page_conversion": {
+   "from": 9,
+   "to": 3
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-indiana/"
+ },
+ {
+  "state": "Iowa",
+  "state_abbr": "IA",
+  "seats": 4,
+  "fra_districts": 1,
+  "fra_seats": 4,
+  "current_districts": 4,
+  "partisanship": {
+   "dem_pct": 44,
+   "rep_pct": 56
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-iowa/"
+ },
+ {
+  "state": "Kansas",
+  "state_abbr": "KS",
+  "seats": 4,
+  "fra_districts": 1,
+  "fra_seats": 4,
+  "current_districts": 4,
+  "partisanship": {
+   "dem_pct": 40,
+   "rep_pct": 60
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-kansas/"
+ },
+ {
+  "state": "Kentucky",
+  "state_abbr": "KY",
+  "seats": 6,
+  "fra_districts": 2,
+  "fra_seats": 6,
+  "current_districts": 6,
+  "partisanship": {
+   "dem_pct": 35,
+   "rep_pct": 65
+  },
+  "page_conversion": {
+   "from": 6,
+   "to": 2
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-kentucky/"
+ },
+ {
+  "state": "Louisiana",
+  "state_abbr": "LA",
+  "seats": 6,
+  "fra_districts": 2,
+  "fra_seats": 6,
+  "current_districts": 6,
+  "partisanship": {
+   "dem_pct": 38,
+   "rep_pct": 62
+  },
+  "page_conversion": {
+   "from": 6,
+   "to": 2
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-louisiana/"
+ },
+ {
+  "state": "Maine",
+  "state_abbr": "ME",
+  "seats": 2,
+  "fra_districts": 1,
+  "fra_seats": 2,
+  "current_districts": 2,
+  "partisanship": {
+   "dem_pct": 52,
+   "rep_pct": 48
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-maine/"
+ },
+ {
+  "state": "Maryland",
+  "state_abbr": "MD",
+  "seats": 8,
+  "fra_districts": 2,
+  "fra_seats": 8,
+  "current_districts": 8,
+  "partisanship": {
+   "dem_pct": 64,
+   "rep_pct": 36
+  },
+  "page_conversion": {
+   "from": 8,
+   "to": 2
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-maryland/"
+ },
+ {
+  "state": "Massachusetts",
+  "state_abbr": "MA",
+  "seats": 9,
+  "fra_districts": 3,
+  "fra_seats": 9,
+  "current_districts": 9,
+  "partisanship": {
+   "dem_pct": 65,
+   "rep_pct": 35
+  },
+  "page_conversion": {
+   "from": 9,
+   "to": 3
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-massachusetts/"
+ },
+ {
+  "state": "Michigan",
+  "state_abbr": "MI",
+  "seats": 13,
+  "fra_districts": 3,
+  "fra_seats": 13,
+  "current_districts": 13,
+  "partisanship": {
+   "dem_pct": 49,
+   "rep_pct": 51
+  },
+  "page_conversion": {
+   "from": 13,
+   "to": 3
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-michigan/"
+ },
+ {
+  "state": "Minnesota",
+  "state_abbr": "MN",
+  "seats": 8,
+  "fra_districts": 2,
+  "fra_seats": 8,
+  "current_districts": 8,
+  "partisanship": {
+   "dem_pct": 51,
+   "rep_pct": 49
+  },
+  "page_conversion": {
+   "from": 8,
+   "to": 2
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-minnesota/"
+ },
+ {
+  "state": "Mississippi",
+  "state_abbr": "MS",
+  "seats": 4,
+  "fra_districts": 1,
+  "fra_seats": 4,
+  "current_districts": 4,
+  "partisanship": {
+   "dem_pct": 40,
+   "rep_pct": 60
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-mississippi/"
+ },
+ {
+  "state": "Missouri",
+  "state_abbr": "MO",
+  "seats": 8,
+  "fra_districts": 2,
+  "fra_seats": 8,
+  "current_districts": 8,
+  "partisanship": {
+   "dem_pct": 40,
+   "rep_pct": 60
+  },
+  "page_conversion": {
+   "from": 8,
+   "to": 2
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-missouri/"
+ },
+ {
+  "state": "Montana",
+  "state_abbr": "MT",
+  "seats": 2,
+  "fra_districts": 1,
+  "fra_seats": 2,
+  "current_districts": 2,
+  "partisanship": {
+   "dem_pct": 40,
+   "rep_pct": 60
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-montana/"
+ },
+ {
+  "state": "Nebraska",
+  "state_abbr": "NE",
+  "seats": 3,
+  "fra_districts": 1,
+  "fra_seats": 3,
+  "current_districts": 3,
+  "partisanship": {
+   "dem_pct": 38,
+   "rep_pct": 62
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-nebraska/"
+ },
+ {
+  "state": "Nevada",
+  "state_abbr": "NV",
+  "seats": 4,
+  "fra_districts": 1,
+  "fra_seats": 4,
+  "current_districts": 4,
+  "partisanship": {
+   "dem_pct": 49,
+   "rep_pct": 51
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-nevada/"
+ },
+ {
+  "state": "New Hampshire",
+  "state_abbr": "NH",
+  "seats": 2,
+  "fra_districts": 1,
+  "fra_seats": 2,
+  "current_districts": 2,
+  "partisanship": {
+   "dem_pct": 51,
+   "rep_pct": 49
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-new-hampshire/"
+ },
+ {
+  "state": "New Jersey",
+  "state_abbr": "NJ",
+  "seats": 12,
+  "fra_districts": 4,
+  "fra_seats": 12,
+  "current_districts": 12,
+  "partisanship": {
+   "dem_pct": 56,
+   "rep_pct": 44
+  },
+  "page_conversion": {
+   "from": 12,
+   "to": 4
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-new-jersey/"
+ },
+ {
+  "state": "New Mexico",
+  "state_abbr": "NM",
+  "seats": 3,
+  "fra_districts": 1,
+  "fra_seats": 3,
+  "current_districts": 3,
+  "partisanship": {
+   "dem_pct": 53,
+   "rep_pct": 47
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-new-mexico/"
+ },
+ {
+  "state": "New York",
+  "state_abbr": "NY",
+  "seats": 26,
+  "fra_districts": 6,
+  "fra_seats": 26,
+  "current_districts": 26,
+  "partisanship": {
+   "dem_pct": 59,
+   "rep_pct": 41
+  },
+  "page_conversion": {
+   "from": 26,
+   "to": 6
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-new-york/"
+ },
+ {
+  "state": "North Carolina",
+  "state_abbr": "NC",
+  "seats": 14,
+  "fra_districts": 4,
+  "fra_seats": 14,
+  "current_districts": 14,
+  "partisanship": {
+   "dem_pct": 47,
+   "rep_pct": 53
+  },
+  "page_conversion": {
+   "from": 14,
+   "to": 4
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-north-carolina/"
+ },
+ {
+  "state": "North Dakota",
+  "state_abbr": "ND",
+  "seats": 1,
+  "fra_districts": 1,
+  "fra_seats": 1,
+  "current_districts": 1,
+  "partisanship": null,
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-north-dakota/"
+ },
+ {
+  "state": "Ohio",
+  "state_abbr": "OH",
+  "seats": 15,
+  "fra_districts": 3,
+  "fra_seats": 15,
+  "current_districts": 15,
+  "partisanship": {
+   "dem_pct": 44,
+   "rep_pct": 56
+  },
+  "page_conversion": {
+   "from": 15,
+   "to": 3
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-ohio/"
+ },
+ {
+  "state": "Oklahoma",
+  "state_abbr": "OK",
+  "seats": 5,
+  "fra_districts": 1,
+  "fra_seats": 5,
+  "current_districts": 5,
+  "partisanship": {
+   "dem_pct": 31,
+   "rep_pct": 69
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-oklahoma/"
+ },
+ {
+  "state": "Oregon",
+  "state_abbr": "OR",
+  "seats": 6,
+  "fra_districts": 1,
+  "fra_seats": 6,
+  "current_districts": 6,
+  "partisanship": {
+   "dem_pct": 56,
+   "rep_pct": 44
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-oregon/"
+ },
+ {
+  "state": "Pennsylvania",
+  "state_abbr": "PA",
+  "seats": 17,
+  "fra_districts": 5,
+  "fra_seats": 17,
+  "current_districts": 17,
+  "partisanship": {
+   "dem_pct": 48,
+   "rep_pct": 52
+  },
+  "page_conversion": {
+   "from": 17,
+   "to": 5
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-pennsylvania/"
+ },
+ {
+  "state": "Rhode Island",
+  "state_abbr": "RI",
+  "seats": 2,
+  "fra_districts": 1,
+  "fra_seats": 2,
+  "current_districts": 2,
+  "partisanship": {
+   "dem_pct": 58,
+   "rep_pct": 42
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-rhode-island/"
+ },
+ {
+  "state": "South Carolina",
+  "state_abbr": "SC",
+  "seats": 7,
+  "fra_districts": 2,
+  "fra_seats": 7,
+  "current_districts": 7,
+  "partisanship": {
+   "dem_pct": 42,
+   "rep_pct": 58
+  },
+  "page_conversion": {
+   "from": 7,
+   "to": 2
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-south-carolina/"
+ },
+ {
+  "state": "South Dakota",
+  "state_abbr": "SD",
+  "seats": 1,
+  "fra_districts": 1,
+  "fra_seats": 1,
+  "current_districts": 1,
+  "partisanship": null,
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-south-dakota/"
+ },
+ {
+  "state": "Tennessee",
+  "state_abbr": "TN",
+  "seats": 9,
+  "fra_districts": 2,
+  "fra_seats": 9,
+  "current_districts": 9,
+  "partisanship": {
+   "dem_pct": 36,
+   "rep_pct": 64
+  },
+  "page_conversion": {
+   "from": 9,
+   "to": 2
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-tennessee/"
+ },
+ {
+  "state": "Texas",
+  "state_abbr": "TX",
+  "seats": 38,
+  "fra_districts": 8,
+  "fra_seats": 38,
+  "current_districts": 38,
+  "partisanship": {
+   "dem_pct": 45,
+   "rep_pct": 55
+  },
+  "page_conversion": {
+   "from": 38,
+   "to": 8
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-texas/"
+ },
+ {
+  "state": "Utah",
+  "state_abbr": "UT",
+  "seats": 4,
+  "fra_districts": 1,
+  "fra_seats": 4,
+  "current_districts": 4,
+  "partisanship": {
+   "dem_pct": 38,
+   "rep_pct": 62
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-utah/"
+ },
+ {
+  "state": "Vermont",
+  "state_abbr": "VT",
+  "seats": 1,
+  "fra_districts": 1,
+  "fra_seats": 1,
+  "current_districts": 1,
+  "partisanship": null,
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-vermont/"
+ },
+ {
+  "state": "Virginia",
+  "state_abbr": "VA",
+  "seats": 11,
+  "fra_districts": 3,
+  "fra_seats": 11,
+  "current_districts": 11,
+  "partisanship": {
+   "dem_pct": 53,
+   "rep_pct": 47
+  },
+  "page_conversion": {
+   "from": 11,
+   "to": 3
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-virginia/"
+ },
+ {
+  "state": "Washington",
+  "state_abbr": "WA",
+  "seats": 10,
+  "fra_districts": 2,
+  "fra_seats": 10,
+  "current_districts": 10,
+  "partisanship": {
+   "dem_pct": 57,
+   "rep_pct": 43
+  },
+  "page_conversion": {
+   "from": 10,
+   "to": 2
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-washington/"
+ },
+ {
+  "state": "West Virginia",
+  "state_abbr": "WV",
+  "seats": 2,
+  "fra_districts": 1,
+  "fra_seats": 2,
+  "current_districts": 2,
+  "partisanship": {
+   "dem_pct": 28,
+   "rep_pct": 72
+  },
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-west-virginia/"
+ },
+ {
+  "state": "Wisconsin",
+  "state_abbr": "WI",
+  "seats": 8,
+  "fra_districts": 2,
+  "fra_seats": 8,
+  "current_districts": 8,
+  "partisanship": {
+   "dem_pct": 48,
+   "rep_pct": 52
+  },
+  "page_conversion": {
+   "from": 8,
+   "to": 2
+  },
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-wisconsin/"
+ },
+ {
+  "state": "Wyoming",
+  "state_abbr": "WY",
+  "seats": 1,
+  "fra_districts": 1,
+  "fra_seats": 1,
+  "current_districts": 1,
+  "partisanship": null,
+  "page_conversion": null,
+  "fairvote_url": "https://fairvote.org/the-fair-representation-act-in-wyoming/"
+ }
+]
