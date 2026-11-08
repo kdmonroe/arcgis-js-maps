@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <title>Utopia: Fair Representation Act House Districts | ArcGIS JS Maps</title>
+
+    <!-- Font Awesome for additional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- ArcGIS Maps SDK 5.0 (includes map-components, calcite, and all modules) -->
+    <script type="module" src="https://js.arcgis.com/5.0/"></script>
+
+    <style>
+        :root {
+            --primary-color: #0078CA;
+            --primary-hover: #005e9e;
+            --secondary-color: #db4405;
+            --text-color: #323232;
+            --background-color: #f8f8f8;
+            --card-background: white;
+            --dem: #2166ac;
+            --rep: #b2182b;
+            --mix: #8e5ea2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--calcite-sans-family, "Avenir Next", "Helvetica Neue", Arial, sans-serif);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
+            color: var(--text-color);
+            background: var(--background-color);
+        }
+
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            gap: 1rem;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            text-align: center;
+        }
+
+        .back-button {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .back-button:hover {
+            opacity: 0.8;
+        }
+
+        .map-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            min-height: 0;
+        }
+
+        arcgis-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* "Today | Utopia" banner over the swipe */
+        .side-labels {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .side-label {
+            background: rgba(255, 255, 255, 0.94);
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            white-space: nowrap;
+        }
+
+        .side-label.today { color: #555; }
+        .side-label.utopia { color: var(--mix); }
+
+        /* Info panel */
+        .info-panel {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 320px;
+            max-height: calc(100% - 24px);
+            overflow-y: auto;
+            background: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+            z-index: 10;
+            font-size: 0.85rem;
+            line-height: 1.45;
+        }
+
+        .info-panel summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 12px 14px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-panel summary::-webkit-details-marker { display: none; }
+        .info-panel summary .chev { transition: transform 0.2s ease; color: #888; }
+        .info-panel[open] summary .chev { transform: rotate(180deg); }
+
+        .panel-body {
+            padding: 12px 14px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .challenge-tag {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--secondary-color);
+        }
+
+        .panel-section {
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+        }
+
+        .panel-section > summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #6a6a6a;
+        }
+
+        .panel-section > summary::-webkit-details-marker { display: none; }
+        .panel-section > summary .chev { transition: transform 0.2s ease; color: #888; font-size: 0.7rem; }
+        .panel-section[open] > summary .chev { transform: rotate(180deg); }
+        .panel-section[open] > summary { margin-bottom: 6px; }
+
+        .panel-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #6a6a6a;
+            margin-bottom: 6px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-card {
+            border-radius: 6px;
+            padding: 8px 10px;
+            background: #f4f4f4;
+        }
+
+        .stat-card.utopia { background: #f3edf7; }
+
+        .stat-card h3 {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .stat-card.utopia h3 { color: var(--mix); }
+
+        .stat-line { display: flex; justify-content: space-between; gap: 6px; }
+        .stat-line strong { font-variant-numeric: tabular-nums; }
+
+        .note {
+            font-size: 0.75rem;
+            color: #6a6a6a;
+        }
+
+        .note a, .panel-body a { color: var(--primary-color); }
+
+        select.state-select {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font: inherit;
+            background: white;
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 0.75rem; }
+            .header h1 { font-size: 1rem; }
+            .back-text { display: none; }
+            .info-panel {
+                top: auto;
+                bottom: 12px;
+                right: 12px;
+                left: 12px;
+                width: auto;
+                max-height: 48%;
+            }
+            .side-label { font-size: 0.7rem; padding: 4px 10px; }
+        }
+    </style>
+    <script defer src="../shared/key-health.js"></script>
+</head>
+<body>
+    <div class="header">
+        <a href="../index.html" class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i><span class="back-text"> Back to Demos</span>
+        </a>
+        <h1>Utopia: Fair Representation Act House Districts</h1>
+        <div></div>
+    </div>
+
+    <div class="map-container">
+        <arcgis-map id="map" center="-96.5, 38.5" zoom="4" popup-component-enabled>
+            <arcgis-zoom slot="top-left"></arcgis-zoom>
+            <arcgis-home slot="top-left"></arcgis-home>
+            <arcgis-expand slot="bottom-left" id="legend-expand" expand-tooltip="Legend" expand-icon="legend">
+                <arcgis-legend></arcgis-legend>
+            </arcgis-expand>
+            <arcgis-swipe id="swipe" position="50"></arcgis-swipe>
+        </arcgis-map>
+
+        <div class="side-labels" aria-hidden="true">
+            <span class="side-label today"><i class="fas fa-caret-left"></i> <span id="left-label">Today: 435 single-member House districts</span></span>
+            <span class="side-label utopia">Utopia: <span id="fra-count">118</span> multi-member House districts <i class="fas fa-caret-right"></i></span>
+        </div>
+
+        <details class="info-panel" id="info-panel">
+            <summary>
+                <span><i class="fas fa-landmark" style="color: var(--primary-color); margin-right: 6px;"></i>What if every House district elected 3&ndash;5 members?</span>
+                <i class="fas fa-chevron-down chev"></i>
+            </summary>
+            <div class="panel-body">
+                <div>
+                    <span class="challenge-tag">#30DayMapChallenge &middot; Day 8: Utopia</span>
+                    <p>Drag the divider. On the left are today's single-member U.S. House districts, where one party usually wins every seat. On the right is FairVote's sample plan under the <strong>Fair Representation Act</strong>: the House keeps its 435 members, but states with six or more seats elect 3&ndash;5 representatives per district by proportional ranked choice voting, and smaller states elect everyone at large. Colors show the projected party mix of each district's seats, so purple means a district sends both parties to the House.</p>
+                </div>
+
+                <details class="panel-section">
+                    <summary>What about the Senate? <i class="fas fa-chevron-down chev"></i></summary>
+                    <p class="note">The Fair Representation Act only changes elections to the U.S. House. The Senate stays as it is: each state still elects two senators statewide, in separate single-seat races held in different years, so there are no Senate districts to redraw and the bill doesn't change them.</p>
+                </details>
+
+                <details class="panel-section">
+                    <summary>Left side of the swipe <i class="fas fa-chevron-down chev"></i></summary>
+                    <calcite-segmented-control id="left-toggle" width="full" scale="s">
+                        <calcite-segmented-control-item value="fairvote" checked>FairVote baseline</calcite-segmented-control-item>
+                        <calcite-segmented-control-item value="living-atlas">119th Congress (2025 maps)</calcite-segmented-control-item>
+                    </calcite-segmented-control>
+                    <p class="note" id="left-note" style="margin-top: 6px;">FairVote's projections for the districts it compared against (the post-2020 maps), colored by projected lean.</p>
+                </details>
+
+                <details class="panel-section" id="sec-numbers">
+                    <summary>By the numbers <i class="fas fa-chevron-down chev"></i></summary>
+                    <div class="stats">
+                        <div class="stat-card">
+                            <h3>Today</h3>
+                            <div class="stat-line"><span>Districts</span><strong id="s-cur-n">&ndash;</strong></div>
+                            <div class="stat-line"><span>Swing seats</span><strong id="s-cur-swing">&ndash;</strong></div>
+                            <div class="stat-line"><span>Safe/likely</span><strong id="s-cur-safe">&ndash;</strong></div>
+                        </div>
+                        <div class="stat-card utopia">
+                            <h3>Utopia</h3>
+                            <div class="stat-line"><span>Districts</span><strong id="s-fra-n">&ndash;</strong></div>
+                            <div class="stat-line"><span>Toss-up seats</span><strong id="s-fra-swing">&ndash;</strong></div>
+                            <div class="stat-line"><span>Elect both parties</span><strong id="s-fra-both">&ndash;</strong></div>
+                        </div>
+                    </div>
+                    <p class="note" style="margin-top: 6px;">FairVote projects that Black voters would have the power to elect in 26% of districts (5% now), Latino voters in 22% (6% now), and AAPI voters in 6% (under 1% now).</p>
+                </details>
+
+                <details class="panel-section">
+                    <summary>Zoom to a state <i class="fas fa-chevron-down chev"></i></summary>
+                    <select class="state-select" id="state-select" aria-label="Zoom to a state">
+                        <option value="">United States</option>
+                    </select>
+                </details>
+
+                <details class="panel-section">
+                    <summary>Sources <i class="fas fa-chevron-down chev"></i></summary>
+                    <p class="note">
+                    District data: <a href="https://fairvote.org/sample-fair-representation-act-maps/" target="_blank" rel="noopener noreferrer">FairVote sample FRA maps <i class="fas fa-external-link-alt" style="font-size: 0.65rem;"></i></a>
+                    (FairVote Action, published via Flourish; for educational purposes, not official districts; boundaries simplified).
+                    119th Congress: <a href="https://www.arcgis.com/home/item.html?id=dd86c378a5d94483be9cb25996d873a4" target="_blank" rel="noopener noreferrer">Esri Living Atlas <i class="fas fa-external-link-alt" style="font-size: 0.65rem;"></i></a>.
+                    Bill: <a href="https://fairvote.org/our-reforms/fair-representation-act/" target="_blank" rel="noopener noreferrer">H.R.4632 <i class="fas fa-external-link-alt" style="font-size: 0.65rem;"></i></a>.
+                    </p>
+                </details>
+            </div>
+        </details>
+    </div>
+
+    <script type="module">
+    // Config loader adapted for SDK 5.0 ES modules
+    function loadConfigScript(url) {
+      return new Promise(function(resolve, reject) {
+        var script = document.createElement('script');
+        script.src = url;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    const COLORS = {
+      safeD: "#2166ac", likelyD: "#4393c3", leanD: "#92c5de",
+      swing: "#b39ddb",
+      leanR: "#f4a582", likelyR: "#d6604d", safeR: "#b2182b",
+      mix: "#8e5ea2", unknown: "#bdbdbd"
+    };
+
+    function fill(color, outlineColor, outlineWidth, opacity) {
+      return {
+        type: "simple-fill",
+        color: hexToRgba(color, opacity ?? 0.85),
+        outline: { color: outlineColor, width: outlineWidth }
+      };
+    }
+
+    function hexToRgba(hex, a) {
+      const n = parseInt(hex.slice(1), 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255, a];
+    }
+
+    async function init() {
+      // Load config
+      var baseUrl = window.location.hostname === 'kdmonroe.github.io' || window.location.hostname === 'kylemonroe.dev'
+        ? '/arcgis-js-maps/shared/config.js'
+        : '../shared/config.js';
+
+      try {
+        await loadConfigScript(baseUrl);
+      } catch (e) {
+        var altUrl = window.location.pathname.includes('/arcgis-js-maps/')
+          ? '../shared/config.js'
+          : '/arcgis-js-maps/shared/config.js';
+        try {
+          await loadConfigScript(altUrl);
+        } catch (e2) {
+          console.error("Failed to load configuration.");
+          alert("Failed to load configuration. Please ensure 'shared/config.js' exists.");
+          return;
+        }
+      }
+
+      if (!window.arcgisConfig || !window.arcgisConfig.apiKey) {
+        console.error("API key not found in config.js");
+        alert("API key not found. Please check your configuration (shared/config.js).");
+        return;
+      }
+
+      // Wait for $arcgis to be available
+      while (typeof $arcgis === 'undefined') {
+        await new Promise(function(r) { setTimeout(r, 100); });
+      }
+
+      const [esriConfig, GeoJSONLayer, FeatureLayer, Basemap, TileLayer] = await $arcgis.import([
+        "@arcgis/core/config.js",
+        "@arcgis/core/layers/GeoJSONLayer.js",
+        "@arcgis/core/layers/FeatureLayer.js",
+        "@arcgis/core/Basemap.js",
+        "@arcgis/core/layers/TileLayer.js"
+      ]);
+
+      esriConfig.apiKey = window.arcgisConfig.apiKey;
+
+      // ---- Left side, option 1: FairVote's baseline single-member districts ----
+      const fairvoteCurrent = new GeoJSONLayer({
+        url: "../data/fairvote_current_districts.geojson",
+        title: "Today: single-member districts (FairVote baseline)",
+        copyright: "FairVote",
+        fields: [
+          { name: "state", type: "string" },
+          { name: "state_abbr", type: "string" },
+          { name: "dist_id", type: "string" },
+          { name: "partisanship", type: "string" },
+          { name: "projection", type: "string" },
+          { name: "dem_share", type: "double" },
+          { name: "derived", type: "integer" },
+          { name: "fairvote_url", type: "string" }
+        ],
+        outFields: ["*"],
+        renderer: {
+          type: "unique-value",
+          valueExpression: "Replace(DefaultValue($feature.projection, 'Unknown'), 'Toss-up', 'Swing Seat')",
+          valueExpressionTitle: "Projected lean",
+          defaultSymbol: fill(COLORS.unknown, [255, 255, 255, 0.9], 0.5),
+          defaultLabel: "No FairVote projection (single-seat state)",
+          uniqueValueInfos: [
+            { value: "Safe Democrat", label: "Safe Democrat", symbol: fill(COLORS.safeD, [255, 255, 255, 0.9], 0.5) },
+            { value: "Likely Democrat", label: "Likely Democrat", symbol: fill(COLORS.likelyD, [255, 255, 255, 0.9], 0.5) },
+            { value: "Lean Democrat", label: "Lean Democrat", symbol: fill(COLORS.leanD, [255, 255, 255, 0.9], 0.5) },
+            { value: "Swing Seat", label: "Swing seat / toss-up", symbol: fill(COLORS.swing, [255, 255, 255, 0.9], 0.5) },
+            { value: "Lean Republican", label: "Lean Republican", symbol: fill(COLORS.leanR, [255, 255, 255, 0.9], 0.5) },
+            { value: "Likely Republican", label: "Likely Republican", symbol: fill(COLORS.likelyR, [255, 255, 255, 0.9], 0.5) },
+            { value: "Safe Republican", label: "Safe Republican", symbol: fill(COLORS.safeR, [255, 255, 255, 0.9], 0.5) }
+          ]
+        },
+        popupTemplate: {
+          title: "{dist_id}: one seat, winner takes all",
+          content: [{
+            type: "text",
+            text: "<b>Projected partisanship:</b> {partisanship}<br><b>Projection:</b> {projection}<br><br>" +
+                  "A single-member district elects one representative, so the 50%+1 side wins the only seat.<br><br>" +
+                  "<a href='{fairvote_url}' target='_blank' rel='noopener noreferrer'>FairVote's page for {state}</a>"
+          }]
+        }
+      });
+
+      // ---- Left side, option 2: live 119th Congress districts (Esri Living Atlas) ----
+      const congress119 = new FeatureLayer({
+        url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_119th_Congressional_Districts/FeatureServer/0",
+        title: "Today: 119th Congress districts (Esri Living Atlas)",
+        visible: false,
+        outFields: ["STATE_ABBR", "CDFIPS", "NAME", "LAST_NAME", "PARTY", "STATE_NAME"],
+        renderer: {
+          type: "unique-value",
+          field: "PARTY",
+          defaultSymbol: fill(COLORS.unknown, [255, 255, 255, 0.9], 0.5),
+          defaultLabel: "Vacant / other",
+          uniqueValueInfos: [
+            { value: "Democrat", label: "Democrat", symbol: fill(COLORS.safeD, [255, 255, 255, 0.9], 0.5) },
+            { value: "Republican", label: "Republican", symbol: fill(COLORS.safeR, [255, 255, 255, 0.9], 0.5) },
+            { value: "Independent", label: "Independent", symbol: fill(COLORS.swing, [255, 255, 255, 0.9], 0.5) }
+          ]
+        },
+        popupTemplate: {
+          title: "{STATE_ABBR}-{CDFIPS}: {NAME}",
+          content: "<b>Representative:</b> {LAST_NAME} ({PARTY})<br>One seat, winner takes all."
+        }
+      });
+
+      // ---- Right side: Fair Representation Act multi-member districts ----
+      const fraLabelExpression = `
+        var s = $feature.seats;
+        var top = Text(s) + IIf(s == 1, " seat", " seats");
+        var d = $feature.dem_total;
+        var r = $feature.rep_total;
+        if (IsEmpty(d) || IsEmpty(r)) { return top; }
+        var t = DefaultValue($feature.tossup, 0);
+        var mix = Text(d) + "D · " + Text(r) + "R";
+        if (t > 0) { mix += " · " + Text(t) + " toss-up"; }
+        return top + TextFormatting.NewLine + mix;
+      `;
+
+      const fraDistricts = new GeoJSONLayer({
+        url: "../data/fra_districts.geojson",
+        title: "Utopia: Fair Representation Act districts (FairVote sample plan)",
+        copyright: "FairVote",
+        fields: [
+          { name: "state", type: "string" },
+          { name: "state_abbr", type: "string" },
+          { name: "dist_id", type: "string" },
+          { name: "seats", type: "integer" },
+          { name: "threshold", type: "string" },
+          { name: "safe_d", type: "integer" },
+          { name: "lean_d", type: "integer" },
+          { name: "tossup", type: "integer" },
+          { name: "lean_r", type: "integer" },
+          { name: "safe_r", type: "integer" },
+          { name: "coalition_seats", type: "integer" },
+          { name: "dem_total", type: "integer" },
+          { name: "rep_total", type: "integer" },
+          { name: "dem_vote_share", type: "double" },
+          { name: "racial_info", type: "string" },
+          { name: "at_large", type: "integer" },
+          { name: "fairvote_url", type: "string" }
+        ],
+        outFields: ["*"],
+        renderer: {
+          type: "class-breaks",
+          valueExpression: `
+            var s = $feature.seats;
+            var d = $feature.dem_total;
+            if (IsEmpty(d) || IsEmpty(s) || s == 0) {
+              // Florida: FairVote published a Democratic vote share, not a seat split
+              return IIf(IsEmpty($feature.dem_vote_share), null, $feature.dem_vote_share);
+            }
+            return (d + 0.5 * DefaultValue($feature.tossup, 0)) / s;
+          `,
+          valueExpressionTitle: "Projected Democratic share of the district's seats (toss-ups count half)",
+          defaultSymbol: fill(COLORS.unknown, [40, 40, 40, 0.95], 1.75),
+          defaultLabel: "No FairVote projection (single-seat state)",
+          classBreakInfos: [
+            { minValue: 0, maxValue: 0.2, label: "Mostly Republican", symbol: fill(COLORS.safeR, [40, 40, 40, 0.95], 1.75) },
+            { minValue: 0.2, maxValue: 0.4, label: "Both parties, leans Republican", symbol: fill("#a3416e", [40, 40, 40, 0.95], 1.75) },
+            { minValue: 0.4, maxValue: 0.6, label: "Both parties, near even", symbol: fill(COLORS.mix, [40, 40, 40, 0.95], 1.75) },
+            { minValue: 0.6, maxValue: 0.8, label: "Both parties, leans Democratic", symbol: fill("#5a77b3", [40, 40, 40, 0.95], 1.75) },
+            { minValue: 0.8, maxValue: 1.0001, label: "Mostly Democratic", symbol: fill(COLORS.safeD, [40, 40, 40, 0.95], 1.75) }
+          ]
+        },
+        labelingInfo: [{
+          labelExpressionInfo: { expression: fraLabelExpression },
+          labelPlacement: "always-horizontal",
+          minScale: 12000000,
+          symbol: {
+            type: "text",
+            color: [30, 30, 30, 1],
+            haloColor: [255, 255, 255, 0.95],
+            haloSize: 1.5,
+            font: { size: 9, weight: "bold", family: "Avenir Next LT Pro" }
+          }
+        }],
+        popupTemplate: {
+          title: "{dist_id}: {seats} seats, proportional RCV",
+          expressionInfos: [
+            {
+              name: "mix",
+              title: "Projected seats",
+              expression: `
+                var d = $feature.dem_total; var r = $feature.rep_total; var t = DefaultValue($feature.tossup, 0);
+                if (IsEmpty(d)) {
+                  var v = $feature.dem_vote_share;
+                  if (!IsEmpty(v)) { return "FairVote published a district Democratic vote share of " + Text(v * 100, "#") + "% rather than a seat split; under proportional RCV, seats track vote share."; }
+                  return "FairVote published no partisan projection for this single seat.";
+                }
+                var out = Text(d) + " Democratic, " + Text(r) + " Republican";
+                if (t > 0) { out += ", " + Text(t) + " toss-up"; }
+                return out;
+              `
+            },
+            {
+              name: "how",
+              title: "How it works",
+              expression: `
+                var s = $feature.seats;
+                if (s == 1) { return "This state has one seat, so it still elects a single representative statewide."; }
+                var where = IIf($feature.at_large == 1, "statewide", "in this district");
+                return "Voters rank candidates and elect " + Text(s) + " members " + where +
+                  ". Any candidate with more than " + $feature.threshold + " of the vote after transfers wins a seat.";
+              `
+            },
+            {
+              name: "coalition",
+              title: "Coalition seats",
+              expression: `
+                var c = $feature.coalition_seats;
+                if (IsEmpty(c) || c == 0) { return ""; }
+                return "Coalition seats (no single racial or ethnic group over the threshold): " + Text(c);
+              `
+            }
+          ],
+          content: [{
+            type: "text",
+            text: "<b>Projected seats:</b> {expression/mix}<br>" +
+                  "<b>Threshold to win a seat:</b> {threshold}<br>" +
+                  "{expression/coalition}<br>" +
+                  "{expression/how}<br><br>" +
+                  "<i>{racial_info}</i><br><br>" +
+                  "<a href='{fairvote_url}' target='_blank' rel='noopener noreferrer'>FairVote's page for {state}</a>"
+          }]
+        }
+      });
+
+      const mapElement = document.getElementById("map");
+
+      // The view takes its spatial reference from the basemap, so a rejected
+      // key would leave a blank page. Fall back to Esri's key-less gray tiles.
+      async function pickBasemap() {
+        const preferred = Basemap.fromId("gray-vector");
+        try {
+          await preferred.load();
+          await Promise.all(preferred.baseLayers.toArray().map(function(l) { return l.load(); }));
+          return preferred;
+        } catch (err) {
+          console.warn("gray-vector basemap unavailable (API key rejected?); using key-less tiles", err);
+          return new Basemap({
+            title: "Light Gray Canvas (key-less)",
+            baseLayers: [new TileLayer({
+              url: "https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Light_Gray_Base/MapServer"
+            })],
+            referenceLayers: [new TileLayer({
+              url: "https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Light_Gray_Reference/MapServer"
+            })]
+          });
+        }
+      }
+      mapElement.basemap = await pickBasemap();
+      await mapElement.viewOnReady();
+
+      mapElement.map.addMany([fairvoteCurrent, congress119, fraDistricts]);
+
+      // ---- Swipe: today on the left, utopia on the right ----
+      const swipe = document.getElementById("swipe");
+      let leftLayer = fairvoteCurrent;
+
+      function attachSwipeLayers() {
+        swipe.startLayers.removeAll();
+        swipe.endLayers.removeAll();
+        swipe.startLayers.add(leftLayer);
+        swipe.endLayers.add(fraDistricts);
+      }
+
+      if (swipe.state === "ready") {
+        attachSwipeLayers();
+      } else {
+        swipe.addEventListener("arcgisPropertyChange", function(e) {
+          if (e.detail.name === "state" && swipe.state === "ready") attachSwipeLayers();
+        });
+      }
+
+      // ---- Toggle which "today" layer sits on the left ----
+      const leftNotes = {
+        "fairvote": "FairVote's projections for the districts it compared against (the post-2020 maps), colored by projected lean.",
+        "living-atlas": "Esri Living Atlas: districts of the 119th Congress (the maps used in the 2024 election), colored by each current member's party. It does not include the maps several states redrew for the 2026 election."
+      };
+      const leftLabels = {
+        "fairvote": "Today: 435 single-member House districts",
+        "living-atlas": "Today: 119th Congress (2025 maps), by member's party"
+      };
+
+      // The Living Atlas layer is public, but a rejected key is still attached to it
+      congress119.load().catch(function(err) {
+        console.warn("119th Congress layer unavailable", err);
+        const item = document.querySelector('calcite-segmented-control-item[value="living-atlas"]');
+        if (item) {
+          item.disabled = true;
+          item.title = "Unavailable: the ArcGIS API key was rejected";
+        }
+        leftNotes["living-atlas"] = "The 119th Congress layer couldn't load because the ArcGIS API key was rejected.";
+      });
+
+      document.getElementById("left-toggle").addEventListener("calciteSegmentedControlChange", function(e) {
+        const value = e.target.value;
+        leftLayer = value === "living-atlas" ? congress119 : fairvoteCurrent;
+        fairvoteCurrent.visible = leftLayer === fairvoteCurrent;
+        congress119.visible = leftLayer === congress119;
+        attachSwipeLayers();
+        document.getElementById("left-note").textContent = leftNotes[value];
+        document.getElementById("left-label").textContent = leftLabels[value];
+      });
+
+      // ---- District data must load before stats; explain failures in the panel ----
+      try {
+        await Promise.all([fairvoteCurrent.load(), fraDistricts.load()]);
+      } catch (err) {
+        console.error("District data failed to load", err);
+        const notice = document.createElement("p");
+        notice.className = "note";
+        notice.setAttribute("role", "alert");
+        notice.style.cssText = "color:#b45309;font-weight:600;margin-top:6px;";
+        notice.textContent = window.location.protocol === "file:"
+          ? "District data can't load when this page is opened from a file. Serve the repo (python3 -m http.server 8000) and open it at http://localhost:8000/."
+          : "Couldn't load the district data: " + (err && err.message ? err.message : err);
+        document.querySelector(".stats").insertAdjacentElement("afterend", notice);
+        document.getElementById("info-panel").open = true;
+        document.getElementById("sec-numbers").open = true;
+        return;
+      }
+
+      // ---- Stats ----
+      const [curRes, fraRes] = await Promise.all([
+        fairvoteCurrent.queryFeatures({ where: "1=1", outFields: ["projection"], returnGeometry: false }),
+        fraDistricts.queryFeatures({ where: "1=1", outFields: ["state", "state_abbr", "seats", "tossup", "dem_total", "rep_total"], returnGeometry: false })
+      ]);
+
+      const cur = curRes.features.map(function(f) { return f.attributes; });
+      const swing = cur.filter(function(a) { return a.projection === "Swing Seat" || a.projection === "Toss-up"; }).length;
+      const safe = cur.filter(function(a) { return /^(Safe|Likely)/.test(a.projection || ""); }).length;
+      document.getElementById("s-cur-n").textContent = cur.length;
+      document.getElementById("s-cur-swing").textContent = swing;
+      document.getElementById("s-cur-safe").textContent = safe + " (" + Math.round(100 * safe / cur.length) + "%)";
+
+      const fra = fraRes.features.map(function(f) { return f.attributes; });
+      const multi = fra.filter(function(a) { return a.seats > 1 && a.dem_total != null; });
+      const both = multi.filter(function(a) { return a.dem_total > 0 && a.rep_total > 0; }).length;
+      const tossups = fra.reduce(function(s, a) { return s + (a.tossup || 0); }, 0);
+      document.getElementById("s-fra-n").textContent = fra.length;
+      document.getElementById("fra-count").textContent = fra.length;
+      document.getElementById("s-fra-swing").textContent = tossups;
+      document.getElementById("s-fra-both").textContent = Math.round(100 * both / multi.length) + "%";
+
+      // ---- Zoom to a state ----
+      const select = document.getElementById("state-select");
+      const states = Array.from(new Map(fra.map(function(a) { return [a.state_abbr, a.state]; })).entries())
+        .sort(function(a, b) { return a[1].localeCompare(b[1]); });
+      states.forEach(function(s) {
+        const opt = document.createElement("option");
+        opt.value = s[0];
+        opt.textContent = s[1];
+        select.appendChild(opt);
+      });
+
+      select.addEventListener("change", async function() {
+        if (!select.value) {
+          mapElement.goTo({ center: [-96.5, 38.5], zoom: 4 });
+          return;
+        }
+        const res = await fraDistricts.queryFeatures({
+          where: "state_abbr = '" + select.value + "'",
+          returnGeometry: true
+        });
+        if (res.features.length) mapElement.goTo(res.features);
+      });
+
+    }
+
+    init().catch(function(err) {
+      console.error("Initialization error:", err);
+    });
+    </script>
+</body>
+</html>
