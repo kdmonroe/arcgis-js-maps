@@ -1,0 +1,14 @@
+Copyright (c) 2025-2026 Keon Monroe. All rights reserved.
+
+This repository is published for viewing only, as a portfolio of map demos.
+No license is granted. You may not copy, modify, distribute, sublicense, or
+otherwise use this code or its contents, in whole or in part, without prior
+written permission from the copyright holder.
+
+Third-party data (including files in data/ and remote map and feature
+services) and third-party libraries (including the ArcGIS Maps SDK for
+JavaScript, Calcite Design System, and Font Awesome) remain the property of
+their respective owners and are subject to their own terms.
+
+THE CONTENTS OF THIS REPOSITORY ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED.
